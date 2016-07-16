@@ -12,7 +12,7 @@ Copy all files of this project to the your Arduino IDE library folder.
 
 Example:
 ```
-cp ~/github/BMI160-Arduino ~/Documents/Arduino
+cp ~/github/BMI160-Arduino ~/Documents/Arduino/libraries/
 ```
 
 ## Circuit

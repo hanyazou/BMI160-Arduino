@@ -19,7 +19,15 @@
 
 #include "CurieIMU.h"
 #include "internal/ss_spi.h"
+#if defined(BMI160GEN_USE_CURIEIMU)
 #include "interrupt.h"
+#else
+#define interrupt_lock() (0)
+#define interrupt_unlock(flags) while (0) {}
+#define soc_gpio_mask_interrupt(a, b) while (0) {}
+#define soc_gpio_unmask_interrupt(a, b) while (0) {}
+typedef int gpio_cfg_data_t;
+#endif
 
 #define CURIE_IMU_CHIP_ID 0xD1
 
@@ -34,12 +42,14 @@
  */
 bool CurieIMUClass::begin()
 {
+#if defined(BMI160GEN_USE_CURIEIMU)
     /* Configure pin-mux settings on the Intel Curie module to 
      * enable SPI mode usage */
     SET_PIN_MODE(35, QRK_PMUX_SEL_MODEA); // SPI1_SS_MISO 
     SET_PIN_MODE(36, QRK_PMUX_SEL_MODEA); // SPI1_SS_MOSI
     SET_PIN_MODE(37, QRK_PMUX_SEL_MODEA); // SPI1_SS_SCK
     SET_PIN_MODE(38, QRK_PMUX_SEL_MODEA); // SPI1_SS_CS_B[0]
+#endif
  
     ss_spi_init();
 
@@ -1411,6 +1421,7 @@ void CurieIMUClass::setDoubleTapDetectionDuration(int duration)
     BMI160Class::setDoubleTapDetectionDuration(bmiDuration);
 }
 
+#if defined(BMI160GEN_USE_CURIEIMU)
 void CurieIMUClass::interrupts(int feature)
 {
     enableInterrupt(feature, true);
@@ -1420,6 +1431,7 @@ void CurieIMUClass::noInterrupts(int feature)
 {
     enableInterrupt(feature, false);
 }
+#endif // defined(BMI160GEN_USE_CURIEIMU)
 
 void CurieIMUClass::enableInterrupt(int feature, bool enabled)
 {
@@ -1553,7 +1565,7 @@ void CurieIMUClass::setStepDetectionMode(int mode)
 
 void CurieIMUClass::readMotionSensor(int& ax, int& ay, int& az, int& gx, int& gy, int& gz)
 {
-    short sax, say, saz, sgx, sgy, sgz;
+    int16_t sax, say, saz, sgx, sgy, sgz;
 
     getMotion6(&sax, &say, &saz, &sgx, &sgy, &sgz);
 
@@ -1567,7 +1579,7 @@ void CurieIMUClass::readMotionSensor(int& ax, int& ay, int& az, int& gx, int& gy
 
 void CurieIMUClass::readAccelerometer(int& x, int& y, int& z)
 {
-    short sx, sy, sz;
+    int16_t sx, sy, sz;
 
     getAcceleration(&sx, &sy, &sz);
 
@@ -1578,7 +1590,7 @@ void CurieIMUClass::readAccelerometer(int& x, int& y, int& z)
 
 void CurieIMUClass::readGyro(int& x, int& y, int& z)
 {
-    short sx, sy, sz;
+    int16_t sx, sy, sz;
 
     getRotation(&sx, &sy, &sz);
 
@@ -1732,6 +1744,7 @@ void bmi160_pin1_isr(void)
  */
 void CurieIMUClass::attachInterrupt(void (*callback)(void))
 {
+#if defined(BMI160GEN_USE_CURIEIMU)
     gpio_cfg_data_t cfg;
 
     _user_callback = callback;
@@ -1743,6 +1756,7 @@ void CurieIMUClass::attachInterrupt(void (*callback)(void))
     cfg.int_debounce = DEBOUNCE_ON;
     cfg.gpio_cb = bmi160_pin1_isr;
     soc_gpio_set_config(SOC_GPIO_AON, BMI160_GPIN_AON_PIN, &cfg);
+#endif
 
     setInterruptMode(1);  // Active-Low
     setInterruptDrive(0); // Push-Pull
@@ -1756,7 +1770,9 @@ void CurieIMUClass::detachInterrupt(void)
 {
     setIntEnabled(false);
 
+#if defined(BMI160GEN_USE_CURIEIMU)
     soc_gpio_deconfig(SOC_GPIO_AON, BMI160_GPIN_AON_PIN);
+#endif
 }
 
 /* Pre-instantiated Object for this class */

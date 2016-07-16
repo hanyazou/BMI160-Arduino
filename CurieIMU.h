@@ -176,8 +176,10 @@ class CurieIMUClass : public BMI160Class {
         float getDetectionDuration(int feature);
         void setDetectionDuration(int feature, float value); //value duration
 
+#if defined(BMI160GEN_USE_CURIEIMU)
         void interrupts(int feature);
         void noInterrupts(int feature);
+#endif
         bool interruptsEnabled(int feature);
 
         bool getInterruptStatus(int feature);

@@ -26,7 +26,6 @@
 #define interrupt_unlock(flags) while (0) {}
 #define soc_gpio_mask_interrupt(a, b) while (0) {}
 #define soc_gpio_unmask_interrupt(a, b) while (0) {}
-typedef int gpio_cfg_data_t;
 #endif
 
 #define CURIE_IMU_CHIP_ID 0xD1

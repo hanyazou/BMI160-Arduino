@@ -50,15 +50,17 @@ int ss_spi_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt)
   p = buf;
   while (0 < tx_cnt) {
     tx_cnt--;
-    int t = SPI.transfer(*p++);
+    SPI.transfer(*p++);
   }
   p = buf;
   while (0 < rx_cnt) {
     rx_cnt--;
-    int t = *p++ = SPI.transfer(0);
 #ifdef DEBUG
+    int t = *p++ = SPI.transfer(0);
     Serial.print(" ");
     Serial.print(t, HEX);
+#else
+    *p++ = SPI.transfer(0);
 #endif // DEBUG
   }
   if (0 <= ss_spi_cs)

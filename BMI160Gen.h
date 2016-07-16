@@ -9,4 +9,6 @@ class BMI160GenClass : public CurieIMUClass {
         bool begin(const int spi_cs_pin = -1);
 };
 
+extern BMI160GenClass BMI160;
+
 #endif /* _BMI160GEN_H_ */

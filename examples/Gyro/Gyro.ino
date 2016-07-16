@@ -10,8 +10,6 @@
       
 #include <BMI160Gen.h>
 
-BMI160GenClass BMI160;
-
 void setup() {
   Serial.begin(9600); // initialize Serial communication
   while (!Serial);    // wait for the serial port to open

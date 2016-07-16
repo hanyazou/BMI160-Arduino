@@ -6,3 +6,5 @@ bool BMI160GenClass::begin(const int spi_cs_pin)
     ss_spi_cs = spi_cs_pin;
     return CurieIMUClass::begin();
 }
+
+BMI160GenClass BMI160;

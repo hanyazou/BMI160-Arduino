@@ -5,8 +5,11 @@
 #include "CurieIMU.h"
 
 class BMI160GenClass : public CurieIMUClass {
+    protected:
+        int interrupt_pin = -1;
     public:
-        bool begin(const int spi_cs_pin = -1);
+        bool begin(const int spi_cs_pin = -1, const int intr_pin = -1);
+        void attachInterrupt(void (*callback)(void));
 };
 
 extern BMI160GenClass BMI160;

@@ -15,6 +15,7 @@ void setup() {
   while (!Serial);    // wait for the serial port to open
 
   // initialize device
+  Serial.println("Initializing IMU device...");
   BMI160.begin(BMI160GenClass::SPI_MODE, /* SS pin# = */10);
   //BMI160.begin(BMI160GenClass::I2C_MODE);
   uint8_t dev_id = BMI160.getDeviceID();
@@ -23,6 +24,7 @@ void setup() {
 
    // Set the accelerometer range to 250 degrees/second
   BMI160.setGyroRange(250);
+  Serial.println("Initializing IMU device...done.");
 }
 
 void loop() {

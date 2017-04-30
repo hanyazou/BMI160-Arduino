@@ -19,6 +19,7 @@ void setup() {
   //BMI160.begin(BMI160GenClass::I2C_MODE, bmi160_i2c_addr, bmi160_interrupt_pin);
   BMI160.attachInterrupt(bmi160_intr);
   BMI160.setIntTapEnabled(true);
+  Serial.println("Initializing IMU device...done.");
 }
 
 void loop() {

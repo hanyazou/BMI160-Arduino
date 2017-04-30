@@ -203,6 +203,10 @@ class CurieIMUClass : public BMI160Class {
         void attachInterrupt(void (*callback)(void));
         void detachInterrupt(void);
 
+    protected:
+	virtual void ss_init();
+	virtual int ss_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
+
     private:
         int serial_buffer_transfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
 

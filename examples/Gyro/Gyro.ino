@@ -15,7 +15,8 @@ void setup() {
   while (!Serial);    // wait for the serial port to open
 
   // initialize device
-  BMI160.begin(10);
+  BMI160.begin(BMI160GenClass::SPI_MODE, /* SS pin# = */10);
+  //BMI160.begin(BMI160GenClass::I2C_MODE);
   uint8_t dev_id = BMI160.getDeviceID();
   Serial.print("DEVICE ID: ");
   Serial.println(dev_id, HEX);

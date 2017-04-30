@@ -50,7 +50,7 @@ bool CurieIMUClass::begin()
     SET_PIN_MODE(38, QRK_PMUX_SEL_MODEA); // SPI1_SS_CS_B[0]
 #endif
  
-    ss_spi_init();
+    ss_init();
 
     /* Perform a dummy read from 0x7f to switch to spi interface */
     uint8_t dummy_reg = 0x7F;
@@ -1703,6 +1703,18 @@ bool CurieIMUClass::stepsDetected()
     return getIntStepStatus();
 }
 
+void CurieIMUClass::ss_init() {
+    ss_spi_init();
+}
+
+int CurieIMUClass::ss_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt)
+{
+    if (rx_cnt) /* For read transfers, assume 1st byte contains register address */
+        buf[0] |= (1 << BMI160_SPI_READ_BIT);
+
+    return ss_spi_xfer(buf, tx_cnt, rx_cnt);
+}
+
 /** Provides a serial buffer transfer implementation for the BMI160 base class
  *  to use for accessing device registers.  This implementation uses the SPI
  *  bus on the Intel Curie module to communicate with the BMI160.
@@ -1711,15 +1723,12 @@ int CurieIMUClass::serial_buffer_transfer(uint8_t *buf, unsigned tx_cnt, unsigne
 {
     int flags, status;
 
-    if (rx_cnt) /* For read transfers, assume 1st byte contains register address */
-        buf[0] |= (1 << BMI160_SPI_READ_BIT);
-
     /* Lock interrupts here to
      * - avoid concurrent access to the SPI bus
      * - avoid delays in SPI transfer due to unrelated interrupts
      */
     flags = interrupt_lock();
-    status = ss_spi_xfer(buf, tx_cnt, rx_cnt);
+    status = ss_xfer(buf, tx_cnt, rx_cnt);
     interrupt_unlock(flags);
 
     return status;

@@ -15,7 +15,6 @@ void setup() {
 
   // initialize device
   Serial.println("Initializing IMU device...");
-  BMI160.begin();
   BMI160.begin(BMI160GenClass::SPI_MODE, bmi160_select_pin, bmi160_interrupt_pin);
   //BMI160.begin(BMI160GenClass::I2C_MODE, bmi160_i2c_addr, bmi160_interrupt_pin);
   BMI160.attachInterrupt(bmi160_intr);

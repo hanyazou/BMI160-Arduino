@@ -16,8 +16,8 @@ class BMI160GenClass : public CurieIMUClass {
         Mode mode;
         virtual void ss_init();
         virtual int ss_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
-	void i2c_init();
-	int i2c_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
+        void i2c_init();
+        int i2c_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
 };
 
 extern BMI160GenClass BMI160;

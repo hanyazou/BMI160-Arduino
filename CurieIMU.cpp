@@ -1704,15 +1704,11 @@ bool CurieIMUClass::stepsDetected()
 }
 
 void CurieIMUClass::ss_init() {
-    ss_spi_init();
 }
 
 int CurieIMUClass::ss_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt)
 {
-    if (rx_cnt) /* For read transfers, assume 1st byte contains register address */
-        buf[0] |= (1 << BMI160_SPI_READ_BIT);
-
-    return ss_spi_xfer(buf, tx_cnt, rx_cnt);
+    return false;
 }
 
 /** Provides a serial buffer transfer implementation for the BMI160 base class

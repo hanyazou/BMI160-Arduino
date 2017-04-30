@@ -13,11 +13,14 @@ class BMI160GenClass : public CurieIMUClass {
     protected:
         int interrupt_pin = -1;
         int i2c_addr = -1;
+        int spi_ss = -1;
         Mode mode;
         virtual void ss_init();
         virtual int ss_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
         void i2c_init();
         int i2c_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
+        void spi_init();
+        int spi_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
 };
 
 extern BMI160GenClass BMI160;

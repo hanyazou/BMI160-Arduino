@@ -15,23 +15,35 @@ Example:
 cp ~/github/BMI160-Arduino ~/Documents/Arduino/libraries/
 ```
 
-## Circuit
+## Get sensor board
+You can find cheap breakout boards ($2~3 USD) on the eBay.
+Pin names may vary by board vendors. I have two variations of BMI160 breakout board.
+![Screenshot](files/wiring3.png)
+
+## Wiring
+
+### SPI mode
 You should connect some digital out pin to the CSB of the BMI160 and tell the number of the pin to the initialize method, begin().
 ![Screenshot](files/circuit.png)
+
+### I2C mode
+You should connect SDO/SA0 pin of the BMI160 to GND for default I2C address or tell the I2C address to the initialize method, begin().
+![Screenshot](files/wiring2.png)
 
 ## Code
 ```
 #include <BMI160Gen.h>
 
-BMI160GenClass BMI160;
 const int select_pin = 10;
+const int i2c_addr = 0x68;
 
 void setup() {
   Serial.begin(9600); // initialize Serial communication
   while (!Serial);    // wait for the serial port to open
 
   // initialize device
-  BMI160.begin(select_pin);
+  BMI160.begin(BMI160GenClass::SPI_MODE, select_pin);
+  //BMI160.begin(BMI160GenClass::I2C_MODE, i2c_addr);
 }
 
 void loop() {

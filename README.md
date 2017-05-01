@@ -64,3 +64,14 @@ void loop() {
   delay(500);
 }
 ```
+
+## Compatibility
+
+Board           |MCU         |tested works|doesn't work|not tested| Notes
+----------------|------------|------------|------------|----------|-----
+Arduino UNO     |ATmega328P  | X          |            |          |
+Arduino 101     |Intel Curie | X          |            |          |
+Arduino Leonardo|ATmega32u4  | X          |            |          | D7 pin for INT
+Arduino M0 PRO  |ATSAMD21G   | X          |            |          | D7 pin for INT
+
+Other boards which have the same MCU might be work well.

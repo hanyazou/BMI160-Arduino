@@ -7,8 +7,8 @@ arduino="/Applications/Arduino-1.8.2.app/Contents/MacOS/Arduino"
 boards=''
 boards="$boards arduino:avr:uno"
 boards="$boards Intel:arc32:arduino_101"
-#boards="$boards arduino:avr:leonardo"
-#boards="$boards arduino:samd:mzero_pro_bl_dbg"
+boards="$boards arduino:avr:leonardo"
+boards="$boards arduino:samd:mzero_pro_bl_dbg"
 #boards="$boards Arduino_STM32:STM32F1:genericSTM32F103C"
 
 opts="--verbose --verify "

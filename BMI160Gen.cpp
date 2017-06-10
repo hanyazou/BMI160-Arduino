@@ -110,17 +110,19 @@ int BMI160GenClass::i2c_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt)
   if( Wire.endTransmission() != 0 ) {
       Serial.println("Wire.endTransmission() failed.");
   }
-  Wire.requestFrom(i2c_addr, rx_cnt);
-  p = buf;
-  while ( Wire.available() && 0 < rx_cnt) {
-    rx_cnt--;
+  if (0 < rx_cnt) {
+    Wire.requestFrom(i2c_addr, rx_cnt);
+    p = buf;
+    while ( Wire.available() && 0 < rx_cnt) {
+      rx_cnt--;
 #ifdef DEBUG
-    int t = *p++ = Wire.read();
-    Serial.print(" ");
-    Serial.print(t, HEX);
+      int t = *p++ = Wire.read();
+      Serial.print(" ");
+      Serial.print(t, HEX);
 #else
-    *p++ = Wire.read();;
+      *p++ = Wire.read();;
 #endif // DEBUG
+    }
   }
 
 #ifdef DEBUG

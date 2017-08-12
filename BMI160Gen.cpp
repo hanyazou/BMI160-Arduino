@@ -26,6 +26,12 @@ bool BMI160GenClass::begin(Mode mode, const int arg1, const int arg2)
     }
     if (0 <= arg2) {
         interrupt_pin = digitalPinToInterrupt(arg2);
+#ifdef DEBUG
+        Serial.print("BMI160GenClass::begin(): pin#=");
+        Serial.print(arg2);
+        Serial.print(" -> interrupt=");
+        Serial.println(interrupt_pin);
+#endif
     }
     return CurieIMUClass::begin();
 }

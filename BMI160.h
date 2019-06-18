@@ -35,6 +35,70 @@ THE SOFTWARE.
 
 #include "Arduino.h"
 
+/********** Define for magnetometer *************/
+#define BMI160_MAG_PMU_STATUS_BIT   0     //Added for BMM150 Support
+#define BMI160_MAG_PMU_STATUS_LEN   2     //Added for BMM150 Support
+
+#define BMI160_STATUS_DRDY_MAG      5     //Added for BMM150 Support
+#define BMI160_STATUS_MAG_MAN_OP    2     //Added for BMM150 Support
+#define BMI160_MAG_RATE_SEL_BIT     0     //Added for BMM150 Support
+#define BMI160_MAG_RATE_SEL_LEN     4     //Added for BMM150 Support
+#define BMI160_FIFO_MAG_EN_BIT      5     //Added for BMM150 Support
+
+#define BMI160_MAG_IF_0             0x4B  //Added for BMM150 Support
+#define BMI160_MAG_IF_1             0x4C  //Added for BMM150 Support
+#define BMI160_MAG_IF_2             0x4D  //Added for BMM150 Support
+#define BMI160_MAG_IF_3             0x4E  //Added for BMM150 Support
+#define BMI160_MAG_IF_4             0x4F  //Added for BMM150 Support
+
+#define BMM150_EN_SLEEP_MODE        0x01  //Added for BMM150 Support
+#define BMM150_XY_REPETITIONS       0x04  //Added for BMM150 Support
+#define BMM150_Z_REPETITIONS        0x0E  //Added for BMM150 Support
+
+#define BMM150_DATA_REG             0x42  //Added for BMM150 Support
+#define BMM150_POWER_REG            0x4B  //Added for BMM150 Support
+#define BMM150_OPMODE_REG           0x4C  //Added for BMM150 Support
+#define BMM150_XY_REP_REG           0x51  //Added for BMM150 Support
+#define BMM150_Z_REP_REG            0x52  //Added for BMM150 Support
+
+//Based I2C addr is 0x20 caused it is 0x10 plus one 0 at the end.
+#define BMM150_BASED_I2C_ADDR       0x20  //Added for BMM150 Support
+#define BMI160_MAG_MAN_EN           0x83  //Added for BMM150 Support
+#define BMI160_MAG_MAN_DIS          0x03  //Added for BMM150 Support
+#define BMI160_MAG_CONF_25Hz        0x06  //Added for BMM150 Support
+
+#define BMM150_POWER_REG_DEFAULT    0x01  //Added for BMM150 Support
+#define BMM150_OPMODE_REG_DEFAULT   0x02  //Added for BMM150 Support
+#define BMM150_OPMODE_REG_P         0x06  //Added for BMM150 Support
+#define BMM150_R_DATA_ADDR          0x42  //Added for BMM150 Support
+
+#define BMI160_FOC_CONF_DEFAULT     0x40  //Added for BMM150 Support
+
+#define BMI160_IF_CONF              0x6B  //Added for BMM150 Support
+
+#define BMI160_2ND_INT_MAG          0x20  //Added for BMM150 Support
+
+#define BMI160_EN_PULL_UP_REG_1     0x37  //Added for BMM150 Support
+#define BMI160_EN_PULL_UP_REG_2     0x9A  //Added for BMM150 Support
+#define BMI160_EN_PULL_UP_REG_3     0xC0  //Added for BMM150 Support
+#define BMI160_EN_PULL_UP_REG_4     0x90  //Added for BMM150 Support
+#define BMI160_EN_PULL_UP_REG_5     0x80  //Added for BMM150 Support
+
+#define BMI160_7F                   0x7F  //Added for BMM150 Support
+
+#define BMI160_CMD_MAG_MODE_NORMAL  0x19  //Added for BMM150 Support
+
+#define BMI160_RA_MAG_X_L           0x04  //Added for BMM150 Support
+#define BMI160_RA_MAG_X_H           0x05  //Added for BMM150 Support
+#define BMI160_RA_MAG_Y_L           0x06  //Added for BMM150 Support
+#define BMI160_RA_MAG_Y_H           0x07  //Added for BMM150 Support
+#define BMI160_RA_MAG_Z_L           0x08  //Added for BMM150 Support
+#define BMI160_RA_MAG_Z_H           0x09  //Added for BMM150 Support
+
+#define BMI160_RA_MAG_CONF          0X44  //Added for BMM150 Support
+
+/**************************/
+
 #define BMI160_SPI_READ_BIT         7
 
 #define BMI160_RA_CHIP_ID           0x00
@@ -264,6 +328,41 @@ THE SOFTWARE.
 
 #define BMI160_RA_CMD               0x7E
 
+//Added for getMotion9() and convertMagneto[X-Z]() support
+
+//Define Overflow Constants for MagnetoConversion on BMM150
+#define BMM150_XYAXES_FLIP_OVERFLOW_ADCVAL  INT16_C(-4096)
+#define BMM150_ZAXIS_HALL_OVERFLOW_ADCVAL   INT16_C(-16384)
+#define BMM150_OVERFLOW_OUTPUT_FLOAT        0.0f
+
+//Important BMM150 Registers
+#define BMM150_DIG_X1                   UINT8_C(0x5D)
+#define BMM150_DIG_Z4_LSB               UINT8_C(0x62)
+#define BMM150_DIG_Z2_LSB               UINT8_C(0x68)
+
+//Delays, in milliseconds
+#define BMI160_AUX_COM_DELAY            UINT8_C(10)
+#define BMI160_READ_WRITE_DELAY         UINT8_C(1)
+
+//Bit Masks for MAG_IF[1]
+#define BMI160_MANUAL_MODE_EN_MSK       UINT8_C(0x80)
+#define BMI160_AUX_READ_BURST_MSK       UINT8_C(0x03)
+
+//Bit Masks and POS for LSB registers
+#define BMM150_DATA_X_MSK       UINT8_C(0xF8)
+#define BMM150_DATA_X_POS       UINT8_C(0x03)
+
+#define BMM150_DATA_Y_MSK       UINT8_C(0xF8)
+#define BMM150_DATA_Y_POS       UINT8_C(0x03)
+
+#define BMM150_DATA_Z_MSK       UINT8_C(0xFE)
+#define BMM150_DATA_Z_POS       UINT8_C(0x01)
+
+#define BMM150_DATA_RHALL_MSK       UINT8_C(0xFC)
+#define BMM150_DATA_RHALL_POS       UINT8_C(0x02)
+
+#define BMM150_GET_BITS(reg_data, bitname)  ((reg_data & (bitname##_MSK)) >> (bitname##_POS))
+                            
 /**
  * Interrupt Latch Mode options
  * @see setInterruptLatch()
@@ -350,6 +449,24 @@ typedef enum {
     BMI160_GYRO_RATE_1600HZ,       /**< 1600    Hz */
     BMI160_GYRO_RATE_3200HZ,       /**< 3200    Hz */
 } BMI160GyroRate;
+
+/**
+ * Magnetometer Output Data Rate options
+ * @see setMagRate()
+ */
+typedef enum {                          //Added for BMM150 Support
+    BMI160_MAG_RATE_25_32HZ = 1,   /**<  25/32  Hz */
+    BMI160_MAG_RATE_25_16HZ,       /**<  25/16  Hz */
+    BMI160_MAG_RATE_25_8HZ,        /**<  25/8   Hz */
+    BMI160_MAG_RATE_25_4HZ,        /**<  25/4   Hz */
+    BMI160_MAG_RATE_25_2HZ,        /**<  25/2   Hz */
+    BMI160_MAG_RATE_25HZ,          /**<  25     Hz */
+    BMI160_MAG_RATE_50HZ,          /**<  50     Hz */
+    BMI160_MAG_RATE_100HZ,         /**<  100    Hz */
+    BMI160_MAG_RATE_200HZ,         /**<  200    Hz */
+    BMI160_MAG_RATE_400HZ,         /**<  400    Hz */
+    BMI160_MAG_RATE_800HZ,         /**<  800    Hz */
+} BMI160MagRate;
 
 /**
  * Step Detection Mode options
@@ -470,6 +587,9 @@ class BMI160Class {
     public:
         void initialize();
         bool testConnection();
+		
+		uint8_t getMagRate();                    //Added for BMM150 Support
+        void setMagRate(uint8_t rate);           //Added for BMM150 Support
 
         uint8_t getGyroRate();
         void setGyroRate(uint8_t rate);
@@ -574,6 +694,8 @@ class BMI160Class {
         void setGyroFIFOEnabled(bool enabled);
         bool getAccelFIFOEnabled();
         void setAccelFIFOEnabled(bool enabled);
+		bool getMagFIFOEnabled();                   //Added for BMM150 Support
+        void setMagFIFOEnabled(bool enabled);       //Added for BMM150 Support
 
         bool getIntFIFOBufferFullEnabled();
         void setIntFIFOBufferFullEnabled(bool enabled);
@@ -595,6 +717,10 @@ class BMI160Class {
         bool getIntDataReadyStatus();
 
         void getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
+        void getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh); //Added for BMM150 Support
+        void getMotion9Bosch(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh); //Added for BMM150 Support
+		void getMotion9Check(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh); //Added for BMM150 Support
+        void getBoschMag(uint8_t* buff, int16_t* mxB, int16_t* myB, int16_t* mzB, uint16_t* rhB); //Added for BMM150 Support
         void getAcceleration(int16_t* x, int16_t* y, int16_t* z);
         int16_t getAccelerationX();
         int16_t getAccelerationY();
@@ -606,6 +732,11 @@ class BMI160Class {
         int16_t getRotationX();
         int16_t getRotationY();
         int16_t getRotationZ();
+		
+        void getMagneto(int16_t* x, int16_t* y, int16_t* z);     //Added for BMM150 Support
+        int16_t getMagnetoX();                                   //Added for BMM150 Support
+        int16_t getMagnetoY();                                   //Added for BMM150 Support
+        int16_t getMagnetoZ();                                   //Added for BMM150 Support
 
         bool getXNegShockDetected();
         bool getXPosShockDetected();

@@ -736,11 +736,11 @@ class BMI160Class {
         int16_t getRotationZ();
 
         //DO NOT USE: UNTESTED, but changed to match getMotion9()
-        void getMagneto(int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh);     //Added for BMM150 Support
-        int16_t getMagnetoX();                                                    //Added for BMM150 Support
-        int16_t getMagnetoY();                                                    //Added for BMM150 Support
-        int16_t getMagnetoZ();                                                    //Added for BMM150 Support
-        uint16_t getRHall();
+        // void getMagneto(int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh);     //Added for BMM150 Support
+        // int16_t getMagnetoX();                                                    //Added for BMM150 Support
+        // int16_t getMagnetoY();                                                    //Added for BMM150 Support
+        // int16_t getMagnetoZ();                                                    //Added for BMM150 Support
+        // uint16_t getRHall();
 
         bool getXNegShockDetected();
         bool getXPosShockDetected();

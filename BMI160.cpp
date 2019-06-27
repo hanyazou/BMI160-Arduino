@@ -2643,71 +2643,71 @@ int16_t BMI160Class::getRotationZ() {
  * @see getMotion9()
  * @see BMI160_RA_MAG_X_L
  */
-void BMI160Class::getMagneto(int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {    //Added for BMM150 Support
-    uint8_t buffer[8];
-    buffer[0] = BMI160_RA_MAG_X_L;
-    serial_buffer_transfer(buffer, 1, 8);
-    //Expand MSB in buffer[n] to int16_t, and shift to the most significant byte
-    //Set non data bits in LSB in buffer[n-1] to 0
-    //bitwise or new 16 bit MSB with masked LSB, essentially tacking LSB as least significant byte of int16_t
-    //Divide by 2^b where b is the number of non data bits in LSB, representing a compensation for left shift of the <16 bit number
-    /* Mag X axis data */
-    *mx = (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;  //MSK = 0xF8
-    /* Mag Y axis data */
-    *my = (int16_t)((((int16_t)buffer[3])<<8) | (buffer[2] & BMM150_DATA_Y_MSK))/8;  //MSK = 0xF8
-    /* Mag Z axis data */
-    *mz = (int16_t)((((int16_t)buffer[5])<<8) | (buffer[4] & BMM150_DATA_Z_MSK))/2;  //MSK = 0xFE
-    /* Mag R-HALL data */
-    *rh = ((((uint16_t)buffer[7])<<8) | (buffer[6] & BMM150_DATA_RHALL_MSK))/4; //MSK = 0xFC
-}
+// void BMI160Class::getMagneto(int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {    //Added for BMM150 Support
+//     uint8_t buffer[8];
+//     buffer[0] = BMI160_RA_MAG_X_L;
+//     serial_buffer_transfer(buffer, 1, 8);
+//     //Expand MSB in buffer[n] to int16_t, and shift to the most significant byte
+//     //Set non data bits in LSB in buffer[n-1] to 0
+//     //bitwise or new 16 bit MSB with masked LSB, essentially tacking LSB as least significant byte of int16_t
+//     //Divide by 2^b where b is the number of non data bits in LSB, representing a compensation for left shift of the <16 bit number
+//     /* Mag X axis data */
+//     *mx = (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;  //MSK = 0xF8
+//     /* Mag Y axis data */
+//     *my = (int16_t)((((int16_t)buffer[3])<<8) | (buffer[2] & BMM150_DATA_Y_MSK))/8;  //MSK = 0xF8
+//     /* Mag Z axis data */
+//     *mz = (int16_t)((((int16_t)buffer[5])<<8) | (buffer[4] & BMM150_DATA_Z_MSK))/2;  //MSK = 0xFE
+//     /* Mag R-HALL data */
+//     *rh = ((((uint16_t)buffer[7])<<8) | (buffer[6] & BMM150_DATA_RHALL_MSK))/4; //MSK = 0xFC
+// }
 
 /** Get X-axis magnetometer reading.UNTESTED!!!
  * @return X-axis magnetometer measurement in 16-bit 2's complement format
  * @see getMotion6()
  * @see BMI160_RA_MAG_X_L
  */
-int16_t BMI160Class::getMagnetoX() {                                  //Added for BMM150 Support
-    uint8_t buffer[2];
-    buffer[0] = BMI160_RA_MAG_X_L;
-    serial_buffer_transfer(buffer, 1, 2);
-    return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;
-}
+// int16_t BMI160Class::getMagnetoX() {                                  //Added for BMM150 Support
+//     uint8_t buffer[2];
+//     buffer[0] = BMI160_RA_MAG_X_L;
+//     serial_buffer_transfer(buffer, 1, 2);
+//     return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;
+// }
 
 /** Get Y-axis magnetometer reading.UNTESTED!!!
  * @return Y-axis magnetometer measurement in 16-bit 2's complement format
  * @see getMotion6()
  * @see BMI160_RA_MAG_Y_L
  */
-int16_t BMI160Class::getMagnetoY() {                                  //Added for BMM150 Support
-    uint8_t buffer[2];
-    buffer[0] = BMI160_RA_MAG_Y_L;
-    serial_buffer_transfer(buffer, 1, 2);
-    return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_Y_MSK))/8;
-}
+// int16_t BMI160Class::getMagnetoY() {                                  //Added for BMM150 Support
+//     uint8_t buffer[2];
+//     buffer[0] = BMI160_RA_MAG_Y_L;
+//     serial_buffer_transfer(buffer, 1, 2);
+//     return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_Y_MSK))/8;
+// }
 
 /** Get Z-axis magnetometer reading.UNTESTED!!!
  * @return Z-axis magnetometer measurement in 16-bit 2's complement format
  * @see getMotion6()
  * @see BMI160_RA_MAG_Z_L
  */
-int16_t BMI160Class::getMagnetoZ() {                                  //Added for BMM150 Support
-    uint8_t buffer[2];
-    buffer[0] = BMI160_RA_MAG_Z_L;
-    serial_buffer_transfer(buffer, 1, 2);
-    return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_Z_MSK))/2;
-}
+// int16_t BMI160Class::getMagnetoZ() {                                  //Added for BMM150 Support
+//     uint8_t buffer[2];
+//     buffer[0] = BMI160_RA_MAG_Z_L;
+//     serial_buffer_transfer(buffer, 1, 2);
+//     return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_Z_MSK))/2;
+// }
 
 /** Get RHall magnetometer reading.UNTESTED!!!
  * @return Rhall magnetometer measurement in 16-bit unsigned int format
  * @see getMotion6()
  * @see BMI160_RA_MAG_R_L
  */
-uint16_t BMI160Class::getRHall(){
-    uint8_t buffer[2];
-    buffer[0] = BMI160_RA_MAG_R_L;
-    serial_buffer_transfer(buffer, 1, 2);
-    return ((((uint16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_RHALL_MSK))/4;
-}
+// uint16_t BMI160Class::getRHall(){
+//     uint8_t buffer[2];
+//     buffer[0] = BMI160_RA_MAG_R_L;
+//     serial_buffer_transfer(buffer, 1, 2);
+//     return ((((uint16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_RHALL_MSK))/4;
+// }
 
 /** Read a BMI160 register directly.
  * @param reg register address

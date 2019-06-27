@@ -2292,11 +2292,13 @@ void BMI160Class::getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx,
  * @param mx 16-bit signed integer container for magnetometer X-axis value
  * @param my 16-bit signed integer container for magnetometer Y-axis value
  * @param mz 16-bit signed integer container for magnetometer Z-axis value
- * @param rh 16-bit signed integer container for Hall resistor value
+ * @param rh 16-bit unsigned integer container for Hall resistor value
  * @see getAcceleration()
  * @see getRotation()
  * @see getMagneto()
  * @see BMI160_RA_MAG_X_L
+ * @see Bosch code and Bosch check code at https://github.com/EmotiBit/BMI160-Arduino/commit/c12a02228fef3c1520ae0164bdca044d22d055ef
+ *      
  */
 void BMI160Class::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, 
                             int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {          //Added for BMM150 Support
@@ -2325,107 +2327,6 @@ void BMI160Class::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx,
     *ay = (((int16_t)buffer[17])  << 8) | buffer[16];
     *az = (((int16_t)buffer[19]) << 8) | buffer[18];
 }
-//Debug function used to test cross over between modded intel library and bosch c API
-void BMI160Class::getMotion9Check(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, 
-                            int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {          //Added for BMM150 Support
-    uint8_t buffer[20];
-    int16_t x,y,z,r,xB,yB,zB;
-    uint16_t rB;
-    buffer[0] = BMI160_RA_MAG_X_L;
-    serial_buffer_transfer(buffer, 1, 20);
-    /* Mag X axis data */
-    x = (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;  //MSK = 0xF8
-    /* Mag Y axis data */
-    y = (int16_t)((((int16_t)buffer[3])<<8) | (buffer[2] & BMM150_DATA_Y_MSK))/8;  //MSK = 0xF8
-    /* Mag Z axis data */
-    z = (int16_t)((((int16_t)buffer[5])<<8) | (buffer[4] & BMM150_DATA_Z_MSK))/2;  //MSK = 0xFE
-    /* Mag R-HALL data */
-    r = ((((uint16_t)buffer[7])<<8) | (buffer[6] & BMM150_DATA_RHALL_MSK))/4; //MSK = 0xFC
-    getBoschMag(&buffer[0],&xB,&yB,&zB,&rB);
-    if ((x==xB)&&(y==yB)&&(z==zB)&&(r==rB))
-    {
-      *mx=x;
-      *my=y;
-      *mz=z;
-      *rh=r;
-    }
-    else
-    {
-      *mx = *my = *mz = 0x7FFF;
-    }
-
-    *gx = (((int16_t)buffer[9])  << 8) | buffer[8];
-    *gy = (((int16_t)buffer[11])  << 8) | buffer[10];
-    *gz = (((int16_t)buffer[13])  << 8) | buffer[12];
-    *ax = (((int16_t)buffer[15])  << 8) | buffer[14];
-    *ay = (((int16_t)buffer[17])  << 8) | buffer[16];
-    *az = (((int16_t)buffer[19]) << 8) | buffer[18];
-}
-//for use in tandem with getMotion9Check()
-void BMI160Class::getBoschMag(uint8_t* buffer, int16_t* mxB, int16_t* myB, int16_t* mzB, uint16_t* rhB){
-    int16_t msb_data;
-    buffer[0] = BMM150_GET_BITS(buffer[0], BMM150_DATA_X);
-    /* Shift the MSB data to left by 5 bits */
-    /* Multiply by 32 to get the shift left by 5 value */
-    msb_data = ((int16_t)((int8_t)buffer[1])) * 32;
-    /* Raw mag X axis data */
-    *mxB = (int16_t)(msb_data | buffer[0]);
-    /* Mag Y axis data */
-    buffer[2] = BMM150_GET_BITS(buffer[2], BMM150_DATA_Y);
-    /* Shift the MSB data to left by 5 bits */
-    /* Multiply by 32 to get the shift left by 5 value */
-    msb_data = ((int16_t)((int8_t)buffer[3])) * 32;
-    /* Raw mag Y axis data */
-    *myB = (int16_t)(msb_data | buffer[2]);
-    /* Mag Z axis data */
-    buffer[4] = BMM150_GET_BITS(buffer[4], BMM150_DATA_Z);
-    /* Shift the MSB data to left by 7 bits */
-    /* Multiply by 128 to get the shift left by 7 value */
-    msb_data = ((int16_t)((int8_t)buffer[5])) * 128;
-    /* Raw mag Z axis data */
-    *mzB = (int16_t)(msb_data | buffer[4]);
-    /* Mag R-HALL data */
-    buffer[6] = BMM150_GET_BITS(buffer[6], BMM150_DATA_RHALL);
-    *rhB = (uint16_t)(((uint16_t)buffer[7] << 6) | buffer[6]);
-}
-//Bosch C-API code modified for compatibility with the Intel Library
-void BMI160Class::getMotion9Bosch(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, 
-                            int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {          //Added for BMM150 Support
-    uint8_t buffer[20];
-    int16_t msb_data;
-    buffer[0] = BMI160_RA_MAG_X_L;
-    serial_buffer_transfer(buffer, 1, 20);
-    buffer[0] = BMM150_GET_BITS(buffer[0], BMM150_DATA_X);
-    /* Shift the MSB data to left by 5 bits */
-    /* Multiply by 32 to get the shift left by 5 value */
-    msb_data = ((int16_t)((int8_t)buffer[1])) * 32;
-    /* Raw mag X axis data */
-    *mx = (int16_t)(msb_data | buffer[0]);
-    /* Mag Y axis data */
-    buffer[2] = BMM150_GET_BITS(buffer[2], BMM150_DATA_Y);
-    /* Shift the MSB data to left by 5 bits */
-    /* Multiply by 32 to get the shift left by 5 value */
-    msb_data = ((int16_t)((int8_t)buffer[3])) * 32;
-    /* Raw mag Y axis data */
-    *my = (int16_t)(msb_data | buffer[2]);
-    /* Mag Z axis data */
-    buffer[4] = BMM150_GET_BITS(buffer[4], BMM150_DATA_Z);
-    /* Shift the MSB data to left by 7 bits */
-    /* Multiply by 128 to get the shift left by 7 value */
-    msb_data = ((int16_t)((int8_t)buffer[5])) * 128;
-    /* Raw mag Z axis data */
-    *mz = (int16_t)(msb_data | buffer[4]);
-    /* Mag R-HALL data */
-    buffer[6] = BMM150_GET_BITS(buffer[6], BMM150_DATA_RHALL);
-    *rh = (uint16_t)(((uint16_t)buffer[7] << 6) | buffer[6]);
-    *gx = (((int16_t)buffer[9])  << 8) | buffer[8];
-    *gy = (((int16_t)buffer[11])  << 8) | buffer[10];
-    *gz = (((int16_t)buffer[13])  << 8) | buffer[12];
-    *ax = (((int16_t)buffer[15])  << 8) | buffer[14];
-    *ay = (((int16_t)buffer[17])  << 8) | buffer[16];
-    *az = (((int16_t)buffer[19]) << 8) | buffer[18];
-}
-
 
 /** Get 3-axis accelerometer readings.
  * These registers store the most recent accelerometer measurements.

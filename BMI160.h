@@ -94,6 +94,8 @@ THE SOFTWARE.
 #define BMI160_RA_MAG_Y_H           0x07  //Added for BMM150 Support
 #define BMI160_RA_MAG_Z_L           0x08  //Added for BMM150 Support
 #define BMI160_RA_MAG_Z_H           0x09  //Added for BMM150 Support
+#define BMI160_RA_MAG_R_L           0x0A  //Added for BMM150 Support
+#define BMI160_RA_MAG_R_H           0x0B  //Added for BMM150 Support
 
 #define BMI160_RA_MAG_CONF          0X44  //Added for BMM150 Support
 
@@ -732,11 +734,13 @@ class BMI160Class {
         int16_t getRotationX();
         int16_t getRotationY();
         int16_t getRotationZ();
-		
-        void getMagneto(int16_t* x, int16_t* y, int16_t* z);     //Added for BMM150 Support
-        int16_t getMagnetoX();                                   //Added for BMM150 Support
-        int16_t getMagnetoY();                                   //Added for BMM150 Support
-        int16_t getMagnetoZ();                                   //Added for BMM150 Support
+
+        //DO NOT USE: UNTESTED, but changed to match getMotion9()
+        void getMagneto(int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh);     //Added for BMM150 Support
+        int16_t getMagnetoX();                                                    //Added for BMM150 Support
+        int16_t getMagnetoY();                                                    //Added for BMM150 Support
+        int16_t getMagnetoZ();                                                    //Added for BMM150 Support
+        uint16_t getRHall();
 
         bool getXNegShockDetected();
         bool getXPosShockDetected();

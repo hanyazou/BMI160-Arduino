@@ -2625,3 +2625,45 @@ uint8_t BMI160Class::getRegister(uint8_t reg) {
 void BMI160Class::setRegister(uint8_t reg, uint8_t data) {
     reg_write(reg, data);
 }
+
+//Added for Better hibernation, could to save up to 3.5mA current draw
+void BMI160Class::suspendIMU(){
+  uint8_t pmu= 255;
+  //The Acc, gyr, and mag are suspended individually, so as to garauntee no collisions in the cmd register; may not be neccessary
+  //ToDo: Look into switch to reg_read_bits()
+  //Suspend Accelerometer
+  //0001 00nn where nn are the pwr bits, 00 for suspend
+  setRegister(BMI160_RA_CMD, 0x10); //set acc pmu mode to suspend: 0001 0000
+  delay(BMI160_READ_WRITE_DELAY);
+  do {
+    pmu = getRegister(BMI160_RA_PMU_STATUS);
+    delay(BMI160_READ_WRITE_DELAY);
+  } //Poll correspinding two pwr status bits in the PMU register
+  while ((get_bit(pmu, BMI160_ACC_PMU_STATUS_BIT) != 0) && (get_bit(pmu, BMI160_ACC_PMU_STATUS_BIT + 1) != 0));
+  
+  //Suspend Gyro
+  //0001 01nn where nn are the pwr bits, 00 for suspend
+  setRegister(BMI160_RA_CMD, 0x14); //set gyr pmu mode to suspend: 0001 0100
+  delay(BMI160_READ_WRITE_DELAY);
+  do {
+    pmu = getRegister(BMI160_RA_PMU_STATUS);
+    delay(BMI160_READ_WRITE_DELAY);
+  } //Poll correspinding two pwr status bits in the PMU register
+  while ((get_bit(pmu, BMI160_GYR_PMU_STATUS_BIT) != 0) && (get_bit(pmu, BMI160_GYR_PMU_STATUS_BIT + 1) != 0));
+
+
+  //Suspend Mag
+  //0001 10nn where nn are the pwr bits, 00 for suspend
+  setRegister(BMI160_RA_CMD, 0x18); //set mag pmu mode to suspend: 0001 1000
+  delay(BMI160_AUX_COM_DELAY);
+  do {
+    pmu = getRegister(BMI160_RA_PMU_STATUS);
+    delay(BMI160_READ_WRITE_DELAY);
+  } //Poll correspinding two pwr status bits in the PMU register
+  while ((get_bit(pmu, BMI160_MAG_PMU_STATUS_BIT) != 0) && (get_bit(pmu, BMI160_MAG_PMU_STATUS_BIT + 1) != 0));
+}
+
+bool BMI160Class::get_bit(uint8_t num, uint8_t bit) {
+  uint8_t mask = 1 << bit;
+  return mask == (num & mask);
+}

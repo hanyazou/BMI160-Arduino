@@ -161,7 +161,7 @@ void BMI160Class::initialize()
     /* Configure MAG interface data rate (25Hz) */
     reg_write(BMI160_MAG_IF_2, BMM150_R_DATA_ADDR);                //Added for BMM150 Support
     /* Configure MAG read data address */
-    reg_write(BMI160_RA_MAG_CONF, BMI160_MAG_CONF_25Hz);           //Added for BMM150 Support
+    reg_write(BMI160_AUX_ODR_ADDR, BMI160_MAG_CONF_25Hz);           //Added for BMM150 Support
     /* Enable MAG data mode */
     reg_write_bits(BMI160_MAG_IF_1, 0, 7, 1);                      //Added for BMM150 Support
     /* Wait for power-up to complete */
@@ -214,11 +214,11 @@ bool BMI160Class::testConnection()
  * </pre>
  *
  * @return Current sample rate
- * @see BMI160_RA_MAG_CONF
+ * @see BMI160_AUX_ODR_ADDR
  * @see BMI160MagRate
  */
 uint8_t BMI160Class::getMagRate() {                                //Added for BMM150 Support
-    return reg_read_bits(BMI160_RA_MAG_CONF,
+    return reg_read_bits(BMI160_AUX_ODR_ADDR,
                          BMI160_MAG_RATE_SEL_BIT,
                          BMI160_MAG_RATE_SEL_LEN);
 }
@@ -227,10 +227,10 @@ uint8_t BMI160Class::getMagRate() {                                //Added for B
  * @param rate New output data rate
  * @see getMagRate()
  * @see BMI160_MAG_RATE_25HZ
- * @see BMI160_RA_MAG_CONF
+ * @see BMI160_AUX_ODR_ADDR
  */
 void BMI160Class::setMagRate(uint8_t rate) {                       //Added for BMM150 Support
-    reg_write_bits(BMI160_RA_MAG_CONF, rate,
+    reg_write_bits(BMI160_AUX_ODR_ADDR, rate,
                    BMI160_MAG_RATE_SEL_BIT,
                    BMI160_MAG_RATE_SEL_LEN);
 }
@@ -1032,6 +1032,49 @@ uint16_t BMI160Class::getStepCount() {
 void BMI160Class::resetStepCount() {
     reg_write(BMI160_RA_CMD, BMI160_CMD_STEP_CNT_CLR);
 }
+/** Get motion detection event acceleration threshold.
+ * This register configures the detection threshold for Motion interrupt
+ * generation in the INT_MOTION[1] register. The unit of threshold is
+ * dependent on the accelerometer sensitivity range (@see
+ * getFullScaleAccelRange()):
+ *
+ * <pre>
+ * Full Scale Range | LSB Resolution
+ * -----------------+----------------
+ * +/- 2g           |  3.91 mg/LSB
+ * +/- 4g           |  7.81 mg/LSB
+ * +/- 8g           | 15.63 mg/LSB
+ * +/- 16g          | 31.25 mg/LSB
+ * </pre>
+ *
+ * Motion is detected when the difference between the absolute value of
+ * consecutive accelerometer measurements for the 3 axes exceeds this Motion
+ * detection threshold. This condition triggers the Motion interrupt if the
+ * condition is maintained for the sample count interval specified in the
+ * int_anym_dur field of the INT_MOTION[0] register (@see BMI160_RA_INT_MOTION_0)
+ *
+ * The Motion interrupt will indicate the axis and polarity of detected motion
+ * in INT_STATUS[2] (@see BMI160_RA_INT_STATUS_2).
+ *
+ * For more details on the Motion detection interrupt, see Section 2.6.1 of the
+ * BMI160 Data Sheet.
+ *
+ * @return Current motion detection acceleration threshold value
+ * @see getMotionDetectionDuration()
+ * @see BMI160_RA_INT_MOTION_1
+ */
+uint8_t BMI160Class::getMotionDetectionThreshold() {
+	return reg_read(BMI160_RA_INT_MOTION_1);
+}
+
+/** Set motion detection event acceleration threshold.
+ * @param threshold New motion detection acceleration threshold value
+ * @see getMotionDetectionThreshold()
+ * @see BMI160_RA_INT_MOTION_1
+ */
+void BMI160Class::setMotionDetectionThreshold(uint8_t threshold) {
+	return reg_write(BMI160_RA_INT_MOTION_1, threshold);
+}
 
 /** Get motion detection event duration threshold.
  * This register configures the duration counter threshold for Motion interrupt
@@ -1051,9 +1094,9 @@ void BMI160Class::resetStepCount() {
  * @see BMI160_RA_INT_MOTION_0
  */
 uint8_t BMI160Class::getMotionDetectionDuration() {
-    return 1 + reg_read_bits(BMI160_RA_INT_MOTION_0,
-                             BMI160_ANYMOTION_DUR_BIT,
-                             BMI160_ANYMOTION_DUR_LEN);
+	return 1 + reg_read_bits(BMI160_RA_INT_MOTION_0,
+		BMI160_ANYMOTION_DUR_BIT,
+		BMI160_ANYMOTION_DUR_LEN);
 }
 
 /** Set motion detection event duration threshold.
@@ -1062,10 +1105,11 @@ uint8_t BMI160Class::getMotionDetectionDuration() {
  * @see BMI160_RA_INT_MOTION_0
  */
 void BMI160Class::setMotionDetectionDuration(uint8_t samples) {
-    reg_write_bits(BMI160_RA_INT_MOTION_0, samples - 1,
-                   BMI160_ANYMOTION_DUR_BIT,
-                   BMI160_ANYMOTION_DUR_LEN);
+	reg_write_bits(BMI160_RA_INT_MOTION_0, samples - 1,
+		BMI160_ANYMOTION_DUR_BIT,
+		BMI160_ANYMOTION_DUR_LEN);
 }
+
 
 /** Get zero motion detection event acceleration threshold.
  * This register configures the detection threshold for Zero Motion interrupt
@@ -1598,7 +1642,7 @@ void BMI160Class::setGyroFIFOEnabled(bool enabled) {
  * @return Current magnetometer FIFO enabled value
  * @see BMI160_RA_FIFO_CONFIG_1
  */
-bool BMI160Class::getGyroFIFOEnabled() {
+bool BMI160Class::getMagFIFOEnabled() {
     return !!(reg_read_bits(BMI160_RA_FIFO_CONFIG_1,
                             BMI160_FIFO_MAG_EN_BIT,
                             1));
@@ -1606,10 +1650,10 @@ bool BMI160Class::getGyroFIFOEnabled() {
 
 /** Set magnetometer FIFO enabled value.
  * @param enabled New magnetometer FIFO enabled value
- * @see getGyroFIFOEnabled()
+ * @see getMagFIFOEnabled()
  * @see BMI160_RA_FIFO_CONFIG_1
  */
-void BMI160Class::setGyroFIFOEnabled(bool enabled) {
+void BMI160Class::setMagFIFOEnabled(bool enabled) {
     reg_write_bits(BMI160_RA_FIFO_CONFIG_1, enabled ? 0x1 : 0,
                    BMI160_FIFO_MAG_EN_BIT,
                    1);

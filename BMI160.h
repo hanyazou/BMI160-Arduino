@@ -57,6 +57,12 @@ THE SOFTWARE.
 //#define BMM150_XY_REPETITIONS       0x04  //Added for BMM150 Support
 //#define BMM150_Z_REPETITIONS        0x0E  //Added for BMM150 Support
 
+/**\name POWER MODE DEFINTIONS      */
+#define BMM150_NORMAL_MODE		UINT8_C(0x00)
+#define BMM150_FORCED_MODE		UINT8_C(0x01)
+#define BMM150_SLEEP_MODE		UINT8_C(0x03)
+#define BMM150_SUSPEND_MODE		UINT8_C(0x04)
+
 //**\name PRESET MODES - REPETITIONS-XY RATES */
 #define BMM150_LOWPOWER_REPXY       UINT8_C(1)
 #define BMM150_REGULAR_REPXY        UINT8_C(4)
@@ -141,7 +147,8 @@ THE SOFTWARE.
 #define BMI160_RA_MAG_R_L           0x0A  //Added for BMM150 Support
 #define BMI160_RA_MAG_R_H           0x0B  //Added for BMM150 Support
 
-#define BMI160_RA_MAG_CONF          0X44  //Added for BMM150 Support
+//#define BMI160_RA_MAG_CONF          0X44  //Added for BMM150 Support
+#define BMI160_AUX_ODR_ADDR         UINT8_C(0x44) //Added for BMM150 Support
 
 /**************************/
 
@@ -710,8 +717,11 @@ class BMI160Class {
         uint8_t getShockDetectionDuration();
         void setShockDetectionDuration(uint8_t duration);
 
-        uint8_t getMotionDetectionDuration();
-        void setMotionDetectionDuration(uint8_t samples);
+		uint8_t getMotionDetectionThreshold();
+		void setMotionDetectionThreshold(uint8_t threshold);
+
+		uint8_t getMotionDetectionDuration();
+		void setMotionDetectionDuration(uint8_t duration);
 
         uint8_t getZeroMotionDetectionThreshold();
         void setZeroMotionDetectionThreshold(uint8_t threshold);
@@ -833,7 +843,7 @@ class BMI160Class {
 
         uint8_t getRegister(uint8_t reg);
         void setRegister(uint8_t reg, uint8_t data);
-		void setRegister(uint8_t reg, uint8_t data, uint8_t bitMask) {
+		void setRegister(uint8_t reg, uint8_t data, uint8_t bitMask);
 
         bool getIntEnabled();
         void setIntEnabled(bool enabled);

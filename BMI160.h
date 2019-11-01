@@ -51,9 +51,23 @@ THE SOFTWARE.
 #define BMI160_MAG_IF_3             0x4E  //Added for BMM150 Support
 #define BMI160_MAG_IF_4             0x4F  //Added for BMM150 Support
 
+#define BMM150_OK					0x00 //Added for BMM150 Support
+
 #define BMM150_EN_SLEEP_MODE        0x01  //Added for BMM150 Support
-#define BMM150_XY_REPETITIONS       0x04  //Added for BMM150 Support
-#define BMM150_Z_REPETITIONS        0x0E  //Added for BMM150 Support
+//#define BMM150_XY_REPETITIONS       0x04  //Added for BMM150 Support
+//#define BMM150_Z_REPETITIONS        0x0E  //Added for BMM150 Support
+
+//**\name PRESET MODES - REPETITIONS-XY RATES */
+#define BMM150_LOWPOWER_REPXY       UINT8_C(1)
+#define BMM150_REGULAR_REPXY        UINT8_C(4)
+#define BMM150_ENHANCED_REPXY       UINT8_C(7)
+#define BMM150_HIGHACCURACY_REPXY   UINT8_C(23)
+
+/**\name PRESET MODES - REPETITIONS-Z RATES */
+#define BMM150_LOWPOWER_REPZ        UINT8_C(2)
+#define BMM150_REGULAR_REPZ         UINT8_C(14)
+#define BMM150_ENHANCED_REPZ        UINT8_C(26)
+#define BMM150_HIGHACCURACY_REPZ    UINT8_C(82)
 
 #define BMM150_DATA_REG             0x42  //Added for BMM150 Support
 #define BMM150_POWER_REG            0x4B  //Added for BMM150 Support
@@ -71,6 +85,36 @@ THE SOFTWARE.
 #define BMM150_OPMODE_REG_DEFAULT   0x02  //Added for BMM150 Support
 #define BMM150_OPMODE_REG_P         0x06  //Added for BMM150 Support
 #define BMM150_R_DATA_ADDR          0x42  //Added for BMM150 Support
+
+//**\name Register Address */
+#define BMM150_CHIP_ID_ADDR			UINT8_C(0x40)
+#define BMM150_DATA_X_LSB			UINT8_C(0x42)
+#define BMM150_DATA_READY_STATUS	UINT8_C(0x48)
+#define BMM150_INTERRUPT_STATUS		UINT8_C(0x4A)
+#define BMM150_POWER_CONTROL_ADDR	UINT8_C(0x4B)
+#define BMM150_OP_MODE_ADDR			UINT8_C(0x4C)
+#define BMM150_INT_CONFIG_ADDR		UINT8_C(0x4D)
+#define BMM150_AXES_ENABLE_ADDR		UINT8_C(0x4E)
+#define BMM150_LOW_THRESHOLD_ADDR	UINT8_C(0x4F)
+#define BMM150_HIGH_THRESHOLD_ADDR	UINT8_C(0x50)
+#define BMM150_REP_XY_ADDR			UINT8_C(0x51)
+#define BMM150_REP_Z_ADDR			UINT8_C(0x52)
+
+//**\name PRESET MODE DEFINITIONS  */
+#define BMM150_PRESETMODE_LOWPOWER                 UINT8_C(0x01)
+#define BMM150_PRESETMODE_REGULAR                  UINT8_C(0x02)
+#define BMM150_PRESETMODE_HIGHACCURACY             UINT8_C(0x03)
+#define BMM150_PRESETMODE_ENHANCED                 UINT8_C(0x04)		
+
+//**\name DATA RATE DEFINITIONS  */
+#define BMM150_DATA_RATE_10HZ        UINT8_C(0x00)
+#define BMM150_DATA_RATE_02HZ        UINT8_C(0x01)
+#define BMM150_DATA_RATE_06HZ        UINT8_C(0x02)
+#define BMM150_DATA_RATE_08HZ        UINT8_C(0x03)
+#define BMM150_DATA_RATE_15HZ        UINT8_C(0x04)
+#define BMM150_DATA_RATE_20HZ        UINT8_C(0x05)
+#define BMM150_DATA_RATE_25HZ        UINT8_C(0x06)
+#define BMM150_DATA_RATE_30HZ        UINT8_C(0x07)
 
 #define BMI160_FOC_CONF_DEFAULT     0x40  //Added for BMM150 Support
 
@@ -330,6 +374,10 @@ THE SOFTWARE.
 
 #define BMI160_RA_CMD               0x7E
 
+//** Enable/disable bit value */
+#define BMI160_ENABLE                        UINT8_C(0x01)
+#define BMI160_DISABLE                       UINT8_C(0x00)
+
 //Added for getMotion9() and convertMagneto[X-Z]() support
 
 //Define Overflow Constants for MagnetoConversion on BMM150
@@ -364,6 +412,22 @@ THE SOFTWARE.
 #define BMM150_DATA_RHALL_POS       UINT8_C(0x02)
 
 #define BMM150_GET_BITS(reg_data, bitname)  ((reg_data & (bitname##_MSK)) >> (bitname##_POS))
+
+
+/** Bandwidth settings */
+/* Accel Bandwidth */
+#define BMI160_ACCEL_BW_OSR4_AVG1            UINT8_C(0x00)
+#define BMI160_ACCEL_BW_OSR2_AVG2            UINT8_C(0x01)
+#define BMI160_ACCEL_BW_NORMAL_AVG4          UINT8_C(0x02)
+#define BMI160_ACCEL_BW_RES_AVG8             UINT8_C(0x03)
+#define BMI160_ACCEL_BW_RES_AVG16            UINT8_C(0x04)
+#define BMI160_ACCEL_BW_RES_AVG32            UINT8_C(0x05)
+#define BMI160_ACCEL_BW_RES_AVG64            UINT8_C(0x06)
+#define BMI160_ACCEL_BW_RES_AVG128           UINT8_C(0x07)
+
+#define BMI160_GYRO_BW_OSR4_MODE             UINT8_C(0x00)
+#define BMI160_GYRO_BW_OSR2_MODE             UINT8_C(0x01)
+#define BMI160_GYRO_BW_NORMAL_MODE           UINT8_C(0x02)
                             
 /**
  * Interrupt Latch Mode options
@@ -646,11 +710,8 @@ class BMI160Class {
         uint8_t getShockDetectionDuration();
         void setShockDetectionDuration(uint8_t duration);
 
-        uint8_t getMotionDetectionThreshold();
-        void setMotionDetectionThreshold(uint8_t threshold);
-
         uint8_t getMotionDetectionDuration();
-        void setMotionDetectionDuration(uint8_t duration);
+        void setMotionDetectionDuration(uint8_t samples);
 
         uint8_t getZeroMotionDetectionThreshold();
         void setZeroMotionDetectionThreshold(uint8_t threshold);
@@ -698,12 +759,12 @@ class BMI160Class {
         void setAccelFIFOEnabled(bool enabled);
 		bool getMagFIFOEnabled();                   //Added for BMM150 Support
         void setMagFIFOEnabled(bool enabled);       //Added for BMM150 Support
-
-        bool getIntFIFOBufferFullEnabled();
+		
+		bool getIntFIFOBufferFullEnabled();
         void setIntFIFOBufferFullEnabled(bool enabled);
         bool getIntDataReadyEnabled();
         void setIntDataReadyEnabled(bool enabled);
-
+		
         uint8_t getIntStatus0();
         uint8_t getIntStatus1();
         uint8_t getIntStatus2();
@@ -719,8 +780,9 @@ class BMI160Class {
         bool getIntDataReadyStatus();
 
         void getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
-        void getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh); //Added for BMM150 Support
-        void getAcceleration(int16_t* x, int16_t* y, int16_t* z);
+        void getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh);		//Added for BMM150 Support
+		void extractMotion9(uint8_t* buffer, int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh);		//Added for BMM150 Support
+		void getAcceleration(int16_t* x, int16_t* y, int16_t* z);
         int16_t getAccelerationX();
         int16_t getAccelerationY();
         int16_t getAccelerationZ();
@@ -771,6 +833,7 @@ class BMI160Class {
 
         uint8_t getRegister(uint8_t reg);
         void setRegister(uint8_t reg, uint8_t data);
+		void setRegister(uint8_t reg, uint8_t data, uint8_t bitMask) {
 
         bool getIntEnabled();
         void setIntEnabled(bool enabled);

@@ -147,11 +147,11 @@ void BMI160Class::initialize()
     delay(3);
 
     /* Set BMM150 repetitions for X/Y-Axis */
-    reg_write(BMI160_MAG_IF_4, BMM150_XY_REPETITIONS);             //Added for BMM150 Support
+    reg_write(BMI160_MAG_IF_4, BMM150_REGULAR_REPXY);             //Added for BMM150 Support
     reg_write(BMI160_MAG_IF_3, BMM150_XY_REP_REG);                 //Added for BMM150 Support
 
     /* Set BMM150 repetitions for Z-Axis */
-    reg_write(BMI160_MAG_IF_4, BMM150_Z_REPETITIONS);              //Added for BMM150 Support
+    reg_write(BMI160_MAG_IF_4, BMM150_REGULAR_REPZ);              //Added for BMM150 Support
     reg_write(BMI160_MAG_IF_3, BMM150_Z_REP_REG);                  //Added for BMM150 Support
 
         /* Configure MAG interface for Data mode */
@@ -1033,50 +1033,6 @@ void BMI160Class::resetStepCount() {
     reg_write(BMI160_RA_CMD, BMI160_CMD_STEP_CNT_CLR);
 }
 
-/** Get motion detection event acceleration threshold.
- * This register configures the detection threshold for Motion interrupt
- * generation in the INT_MOTION[1] register. The unit of threshold is
- * dependent on the accelerometer sensitivity range (@see
- * getFullScaleAccelRange()):
- *
- * <pre>
- * Full Scale Range | LSB Resolution
- * -----------------+----------------
- * +/- 2g           |  3.91 mg/LSB
- * +/- 4g           |  7.81 mg/LSB
- * +/- 8g           | 15.63 mg/LSB
- * +/- 16g          | 31.25 mg/LSB
- * </pre>
- *
- * Motion is detected when the difference between the absolute value of
- * consecutive accelerometer measurements for the 3 axes exceeds this Motion
- * detection threshold. This condition triggers the Motion interrupt if the
- * condition is maintained for the sample count interval specified in the
- * int_anym_dur field of the INT_MOTION[0] register (@see BMI160_RA_INT_MOTION_0)
- *
- * The Motion interrupt will indicate the axis and polarity of detected motion
- * in INT_STATUS[2] (@see BMI160_RA_INT_STATUS_2).
- *
- * For more details on the Motion detection interrupt, see Section 2.6.1 of the
- * BMI160 Data Sheet.
- *
- * @return Current motion detection acceleration threshold value
- * @see getMotionDetectionDuration()
- * @see BMI160_RA_INT_MOTION_1
- */
-uint8_t BMI160Class::getMotionDetectionThreshold() {
-    return reg_read(BMI160_RA_INT_MOTION_1);
-}
-
-/** Set motion detection event acceleration threshold.
- * @param threshold New motion detection acceleration threshold value
- * @see getMotionDetectionThreshold()
- * @see BMI160_RA_INT_MOTION_1
- */
-void BMI160Class::setMotionDetectionThreshold(uint8_t threshold) {
-    return reg_write(BMI160_RA_INT_MOTION_1, threshold);
-}
-
 /** Get motion detection event duration threshold.
  * This register configures the duration counter threshold for Motion interrupt
  * generation, as a number of consecutive samples (from 1-4). The time
@@ -1633,6 +1589,29 @@ bool BMI160Class::getGyroFIFOEnabled() {
 void BMI160Class::setGyroFIFOEnabled(bool enabled) {
     reg_write_bits(BMI160_RA_FIFO_CONFIG_1, enabled ? 0x1 : 0,
                    BMI160_FIFO_GYR_EN_BIT,
+                   1);
+}
+
+/** Get magnetometer FIFO enabled value.
+ * When set to 1, this bit enables magnetometer data samples to be
+ * written into the FIFO buffer.
+ * @return Current magnetometer FIFO enabled value
+ * @see BMI160_RA_FIFO_CONFIG_1
+ */
+bool BMI160Class::getGyroFIFOEnabled() {
+    return !!(reg_read_bits(BMI160_RA_FIFO_CONFIG_1,
+                            BMI160_FIFO_MAG_EN_BIT,
+                            1));
+}
+
+/** Set magnetometer FIFO enabled value.
+ * @param enabled New magnetometer FIFO enabled value
+ * @see getGyroFIFOEnabled()
+ * @see BMI160_RA_FIFO_CONFIG_1
+ */
+void BMI160Class::setGyroFIFOEnabled(bool enabled) {
+    reg_write_bits(BMI160_RA_FIFO_CONFIG_1, enabled ? 0x1 : 0,
+                   BMI160_FIFO_MAG_EN_BIT,
                    1);
 }
 
@@ -2313,7 +2292,31 @@ void BMI160Class::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx,
     //bitwise or new 16 bit MSB with masked LSB, essentially tacking LSB as least significant byte of int16_t
     //Divide by 2^b where b is the number of non data bits in LSB, representing a compensation for left shift of the <16 bit number
     /* Mag X axis data */
-    *mx = (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;  //MSK = 0xF8
+	extractMotion9(buffer, ax, ay, az, gx, gy, gz,  mx, my, mz, rh);
+}
+
+/** Extract raw 9-axis motion sensor readings (accel/gyro/magneto) plus the hall resistor readings from 20 byte buffer
+ * Retrieves all currently available motion sensor values.
+ * @param ax 16-bit signed integer container for accelerometer X-axis value
+ * @param ay 16-bit signed integer container for accelerometer Y-axis value
+ * @param az 16-bit signed integer container for accelerometer Z-axis value
+ * @param gx 16-bit signed integer container for gyroscope X-axis value
+ * @param gy 16-bit signed integer container for gyroscope Y-axis value
+ * @param gz 16-bit signed integer container for gyroscope Z-axis value
+ * @param mx 16-bit signed integer container for magnetometer X-axis value
+ * @param my 16-bit signed integer container for magnetometer Y-axis value
+ * @param mz 16-bit signed integer container for magnetometer Z-axis value
+ * @param rh 16-bit unsigned integer container for Hall resistor value
+ * @see getMotion9()
+ * @see getAcceleration()
+ * @see getRotation()
+ * @see getMagneto()
+ * @see BMI160_RA_MAG_X_L
+ * @see Bosch code and Bosch check code at https://github.com/EmotiBit/BMI160-Arduino/commit/c12a02228fef3c1520ae0164bdca044d22d055ef
+ *      
+ */
+void BMI160Class::extractMotion9(uint8_t * buffer, int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {
+	*mx = (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;  //MSK = 0xF8
     /* Mag Y axis data */
     *my = (int16_t)((((int16_t)buffer[3])<<8) | (buffer[2] & BMM150_DATA_Y_MSK))/8;  //MSK = 0xF8
     /* Mag Z axis data */
@@ -2325,8 +2328,9 @@ void BMI160Class::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx,
     *gz = (((int16_t)buffer[13])  << 8) | buffer[12];
     *ax = (((int16_t)buffer[15])  << 8) | buffer[14];
     *ay = (((int16_t)buffer[17])  << 8) | buffer[16];
-    *az = (((int16_t)buffer[19]) << 8) | buffer[18];
+    *az = (((int16_t)buffer[19]) << 8) | buffer[18];					
 }
+							
 
 /** Get 3-axis accelerometer readings.
  * These registers store the most recent accelerometer measurements.
@@ -2623,5 +2627,16 @@ uint8_t BMI160Class::getRegister(uint8_t reg) {
  * @param data 8-bit register value
  */
 void BMI160Class::setRegister(uint8_t reg, uint8_t data) {
+    reg_write(reg, data);
+}
+
+/** Write a BMI160 register directly.
+ * @param reg register address
+ * @param data 8-bit register value
+ * @param bitMask 8-bit mask
+ */
+void BMI160Class::setRegister(uint8_t reg, uint8_t data, uint8_t bitMask) {
+	uint8_t regValue = reg_read(reg);
+	data = (((uint8_t) regValue) & ~bitMask) | data;
     reg_write(reg, data);
 }

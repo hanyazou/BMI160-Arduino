@@ -159,7 +159,7 @@ void BMI160Class::initialize()
     reg_write(BMI160_MAG_IF_4, BMM150_OPMODE_REG_DEFAULT);         //Added for BMM150 Support
     reg_write(BMI160_MAG_IF_3, BMM150_OPMODE_REG);                 //Added for BMM150 Support
     /* Configure MAG interface data rate (25Hz) */
-    reg_write(BMI160_MAG_IF_2, BMM150_R_DATA_ADDR);                //Added for BMM150 Support
+    reg_write(BMI160_MAG_IF_2, BMM150_DATA_REG);                //Added for BMM150 Support
     /* Configure MAG read data address */
     reg_write(BMI160_AUX_ODR_ADDR, BMI160_MAG_CONF_25Hz);           //Added for BMM150 Support
     /* Enable MAG data mode */

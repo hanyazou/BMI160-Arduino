@@ -63,6 +63,9 @@ THE SOFTWARE.
 #define BMM150_SLEEP_MODE		UINT8_C(0x03)
 #define BMM150_SUSPEND_MODE		UINT8_C(0x04)
 
+#define BMM150_OP_MODE_BIT			1
+#define BMM150_OP_MODE_LEN			2
+
 //**\name PRESET MODES - REPETITIONS-XY RATES */
 #define BMM150_LOWPOWER_REPXY       UINT8_C(1)
 #define BMM150_REGULAR_REPXY        UINT8_C(4)
@@ -121,6 +124,9 @@ THE SOFTWARE.
 #define BMM150_DATA_RATE_20HZ        UINT8_C(0x05)
 #define BMM150_DATA_RATE_25HZ        UINT8_C(0x06)
 #define BMM150_DATA_RATE_30HZ        UINT8_C(0x07)
+
+#define BMM150_DATA_RATE_BIT		3
+#define BMM150_DATA_RATE_LEN		3
 
 #define BMI160_FOC_CONF_DEFAULT     0x40  //Added for BMM150 Support
 
@@ -240,6 +246,8 @@ THE SOFTWARE.
 
 #define BMI160_RA_FIFO_CONFIG_0     0x46
 #define BMI160_RA_FIFO_CONFIG_1     0x47
+
+#define MAX_FIFO_BYTES				1024
 
 #define BMI160_ANYMOTION_EN_BIT     0
 #define BMI160_ANYMOTION_EN_LEN     3
@@ -855,13 +863,13 @@ class BMI160Class {
         void setInterruptLatch(uint8_t latch);
         void resetInterrupt();
 
+        void reg_write_bits(uint8_t reg, uint8_t data, unsigned pos, unsigned len);
     protected:
         virtual int serial_buffer_transfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
 
     private:
         uint8_t reg_read (uint8_t reg);
         void reg_write(uint8_t reg, uint8_t data);
-        void reg_write_bits(uint8_t reg, uint8_t data, unsigned pos, unsigned len);
         uint8_t reg_read_bits(uint8_t reg, unsigned pos, unsigned len);
 };
 

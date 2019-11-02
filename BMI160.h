@@ -89,6 +89,7 @@ THE SOFTWARE.
 #define BMI160_MAG_MAN_EN           0x83  //Added for BMM150 Support
 #define BMI160_MAG_MAN_DIS          0x03  //Added for BMM150 Support
 #define BMI160_MAG_CONF_25Hz        0x06  //Added for BMM150 Support
+#define BMM150_BASED_I2C_MASK		0xFE
 
 #define BMM150_POWER_REG_DEFAULT    0x01  //Added for BMM150 Support
 #define BMM150_OPMODE_REG_DEFAULT   0x02  //Added for BMM150 Support

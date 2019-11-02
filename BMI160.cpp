@@ -131,7 +131,7 @@ void BMI160Class::initialize()
     reg_write_bits(BMI160_RA_MAG_X_H, 2, 4, 2);                    //Added for BMM150 Support
     reg_write(BMI160_7F, BMI160_EN_PULL_UP_REG_5);                 //Added for BMM150 Support
 
-    /* Set MAG I2C address to 0x10 */
+    /* Set MAG I2C address */
     reg_write(BMI160_MAG_IF_0, BMM150_BASED_I2C_ADDR);             //Added for BMM150 Support
     
     /* Enable MAG setup mode, set read out offset to MAX and burst length to 8 */
@@ -158,9 +158,9 @@ void BMI160Class::initialize()
     /* Configure MAG write address and data to force mode of BMM150 */
     reg_write(BMI160_MAG_IF_4, BMM150_OPMODE_REG_DEFAULT);         //Added for BMM150 Support
     reg_write(BMI160_MAG_IF_3, BMM150_OPMODE_REG);                 //Added for BMM150 Support
-    /* Configure MAG interface data rate (25Hz) */
-    reg_write(BMI160_MAG_IF_2, BMM150_DATA_REG);                //Added for BMM150 Support
     /* Configure MAG read data address */
+    reg_write(BMI160_MAG_IF_2, BMM150_DATA_REG);                //Added for BMM150 Support
+    /* Configure MAG interface data rate (25Hz) */
     reg_write(BMI160_AUX_ODR_ADDR, BMI160_MAG_CONF_25Hz);           //Added for BMM150 Support
     /* Enable MAG data mode */
     reg_write_bits(BMI160_MAG_IF_1, 0, 7, 1);                      //Added for BMM150 Support

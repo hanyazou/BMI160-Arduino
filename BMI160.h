@@ -865,6 +865,11 @@ class BMI160Class {
         void resetInterrupt();
 
         void reg_write_bits(uint8_t reg, uint8_t data, unsigned pos, unsigned len);
+        //Added for a better hibernate function
+        //Puts Accel, Gyro, and Mag into suspend mode, for low power consumption
+        //Time to exectute function is untested; while() is present
+        void suspendIMU();
+
     protected:
         virtual int serial_buffer_transfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
 
@@ -872,6 +877,7 @@ class BMI160Class {
         uint8_t reg_read (uint8_t reg);
         void reg_write(uint8_t reg, uint8_t data);
         uint8_t reg_read_bits(uint8_t reg, unsigned pos, unsigned len);
+        bool get_bit(uint8_t num, uint8_t bit); //some cases this may be useful for when the register is already read
 };
 
 #endif /* _BMI160_H_ */

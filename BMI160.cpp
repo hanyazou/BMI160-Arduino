@@ -115,6 +115,61 @@ void BMI160Class::initialize()
 
     setFullScaleGyroRange(BMI160_GYRO_RANGE_250);
     setFullScaleAccelRange(BMI160_ACCEL_RANGE_2G);
+	
+	
+	        /* Configure MAG interface and setup mode */
+    /* Set MAG interface normal power mode */
+    reg_write(BMI160_RA_CMD, BMI160_CMD_MAG_MODE_NORMAL);          //Added for BMM150 Support
+    delay(60); 
+
+    /* Sequence for enabling pull-up register */
+    reg_write(BMI160_RA_FOC_CONF, BMI160_FOC_CONF_DEFAULT);        //Added for BMM150 Support
+    reg_write(BMI160_RA_CMD, BMI160_EN_PULL_UP_REG_1);             //Added for BMM150 Support
+    reg_write(BMI160_RA_CMD, BMI160_EN_PULL_UP_REG_2);             //Added for BMM150 Support
+    reg_write(BMI160_RA_CMD, BMI160_EN_PULL_UP_REG_3);             //Added for BMM150 Support
+    reg_write(BMI160_7F, BMI160_EN_PULL_UP_REG_4);                 //Added for BMM150 Support
+    reg_write_bits(BMI160_RA_MAG_X_H, 2, 4, 2);                    //Added for BMM150 Support
+    reg_write(BMI160_7F, BMI160_EN_PULL_UP_REG_5);                 //Added for BMM150 Support
+
+    /* Set MAG I2C address */
+    reg_write(BMI160_MAG_IF_0, BMM150_BASED_I2C_ADDR);             //Added for BMM150 Support
+    
+    /* Enable MAG setup mode, set read out offset to MAX and burst length to 8 */
+    reg_write(BMI160_MAG_IF_1, BMI160_MAG_MAN_EN);                 //Added for BMM150 Support
+    
+    /* Enable MAG interface */
+    reg_write_bits(BMI160_IF_CONF, 2, 4, 2);                       //Added for BMM150 Support
+
+        /* Configure BMM150 Sensor */
+    /* Enable BMM150 Sleep mode */
+    reg_write(BMI160_MAG_IF_4, BMM150_EN_SLEEP_MODE);              //Added for BMM150 Support
+    reg_write(BMI160_MAG_IF_3, BMM150_POWER_REG);                  //Added for BMM150 Support
+    delay(3);
+
+    /* Set BMM150 repetitions for X/Y-Axis */
+    reg_write(BMI160_MAG_IF_4, BMM150_REGULAR_REPXY);             //Added for BMM150 Support
+    reg_write(BMI160_MAG_IF_3, BMM150_XY_REP_REG);                 //Added for BMM150 Support
+
+    /* Set BMM150 repetitions for Z-Axis */
+    reg_write(BMI160_MAG_IF_4, BMM150_REGULAR_REPZ);              //Added for BMM150 Support
+    reg_write(BMI160_MAG_IF_3, BMM150_Z_REP_REG);                  //Added for BMM150 Support
+
+        /* Configure MAG interface for Data mode */
+    /* Configure MAG write address and data to force mode of BMM150 */
+    reg_write(BMI160_MAG_IF_4, BMM150_OPMODE_REG_DEFAULT);         //Added for BMM150 Support
+    reg_write(BMI160_MAG_IF_3, BMM150_OPMODE_REG);                 //Added for BMM150 Support
+    /* Configure MAG read data address */
+    reg_write(BMI160_MAG_IF_2, BMM150_DATA_REG);                //Added for BMM150 Support
+    /* Configure MAG interface data rate (25Hz) */
+    reg_write(BMI160_AUX_ODR_ADDR, BMI160_MAG_CONF_25Hz);           //Added for BMM150 Support
+    /* Enable MAG data mode */
+    reg_write_bits(BMI160_MAG_IF_1, 0, 7, 1);                      //Added for BMM150 Support
+    /* Wait for power-up to complete */
+    while (0x1 != reg_read_bits(BMI160_RA_PMU_STATUS,
+                                BMI160_MAG_PMU_STATUS_BIT,
+                                BMI160_MAG_PMU_STATUS_LEN))
+        delay(1);
+		
 
     /* Only PIN1 interrupts currently supported - map all interrupts to PIN1 */
     reg_write(BMI160_RA_INT_MAP_0, 0xFF);
@@ -139,6 +194,47 @@ bool BMI160Class::testConnection()
 {
     return (BMI160_CHIP_ID == getDeviceID());
 }
+
+/** Get magnetometer output data rate.
+ * The mag_odr parameter allows setting the output data rate of the magnetometer
+ * as described in the table below.
+ *
+ * <pre>
+ *  1 =  25/32Hz
+ *  2 =  25/16Hz
+ *  3 =  25/8Hz
+ *  4 =  25/4Hz
+ *  5 =  25/2Hz
+ *  6 =  25Hz
+ *  7 =  50Hz
+ *  8 =  100Hz
+ *  9 =  200Hz
+ *  10 = 400Hz
+ *  11 = 800Hz
+ * </pre>
+ *
+ * @return Current sample rate
+ * @see BMI160_AUX_ODR_ADDR
+ * @see BMI160MagRate
+ */
+uint8_t BMI160Class::getMagRate() {                                //Added for BMM150 Support
+    return reg_read_bits(BMI160_AUX_ODR_ADDR,
+                         BMI160_MAG_RATE_SEL_BIT,
+                         BMI160_MAG_RATE_SEL_LEN);
+}
+
+/** Set magnetometer output data rate.
+ * @param rate New output data rate
+ * @see getMagRate()
+ * @see BMI160_MAG_RATE_25HZ
+ * @see BMI160_AUX_ODR_ADDR
+ */
+void BMI160Class::setMagRate(uint8_t rate) {                       //Added for BMM150 Support
+    reg_write_bits(BMI160_AUX_ODR_ADDR, rate,
+                   BMI160_MAG_RATE_SEL_BIT,
+                   BMI160_MAG_RATE_SEL_LEN);
+}
+
 
 /** Get gyroscope output data rate.
  * The gyr_odr parameter allows setting the output data rate of the gyroscope
@@ -936,7 +1032,6 @@ uint16_t BMI160Class::getStepCount() {
 void BMI160Class::resetStepCount() {
     reg_write(BMI160_RA_CMD, BMI160_CMD_STEP_CNT_CLR);
 }
-
 /** Get motion detection event acceleration threshold.
  * This register configures the detection threshold for Motion interrupt
  * generation in the INT_MOTION[1] register. The unit of threshold is
@@ -969,7 +1064,7 @@ void BMI160Class::resetStepCount() {
  * @see BMI160_RA_INT_MOTION_1
  */
 uint8_t BMI160Class::getMotionDetectionThreshold() {
-    return reg_read(BMI160_RA_INT_MOTION_1);
+	return reg_read(BMI160_RA_INT_MOTION_1);
 }
 
 /** Set motion detection event acceleration threshold.
@@ -978,7 +1073,7 @@ uint8_t BMI160Class::getMotionDetectionThreshold() {
  * @see BMI160_RA_INT_MOTION_1
  */
 void BMI160Class::setMotionDetectionThreshold(uint8_t threshold) {
-    return reg_write(BMI160_RA_INT_MOTION_1, threshold);
+	return reg_write(BMI160_RA_INT_MOTION_1, threshold);
 }
 
 /** Get motion detection event duration threshold.
@@ -999,9 +1094,9 @@ void BMI160Class::setMotionDetectionThreshold(uint8_t threshold) {
  * @see BMI160_RA_INT_MOTION_0
  */
 uint8_t BMI160Class::getMotionDetectionDuration() {
-    return 1 + reg_read_bits(BMI160_RA_INT_MOTION_0,
-                             BMI160_ANYMOTION_DUR_BIT,
-                             BMI160_ANYMOTION_DUR_LEN);
+	return 1 + reg_read_bits(BMI160_RA_INT_MOTION_0,
+		BMI160_ANYMOTION_DUR_BIT,
+		BMI160_ANYMOTION_DUR_LEN);
 }
 
 /** Set motion detection event duration threshold.
@@ -1010,10 +1105,11 @@ uint8_t BMI160Class::getMotionDetectionDuration() {
  * @see BMI160_RA_INT_MOTION_0
  */
 void BMI160Class::setMotionDetectionDuration(uint8_t samples) {
-    reg_write_bits(BMI160_RA_INT_MOTION_0, samples - 1,
-                   BMI160_ANYMOTION_DUR_BIT,
-                   BMI160_ANYMOTION_DUR_LEN);
+	reg_write_bits(BMI160_RA_INT_MOTION_0, samples - 1,
+		BMI160_ANYMOTION_DUR_BIT,
+		BMI160_ANYMOTION_DUR_LEN);
 }
+
 
 /** Get zero motion detection event acceleration threshold.
  * This register configures the detection threshold for Zero Motion interrupt
@@ -1537,6 +1633,29 @@ bool BMI160Class::getGyroFIFOEnabled() {
 void BMI160Class::setGyroFIFOEnabled(bool enabled) {
     reg_write_bits(BMI160_RA_FIFO_CONFIG_1, enabled ? 0x1 : 0,
                    BMI160_FIFO_GYR_EN_BIT,
+                   1);
+}
+
+/** Get magnetometer FIFO enabled value.
+ * When set to 1, this bit enables magnetometer data samples to be
+ * written into the FIFO buffer.
+ * @return Current magnetometer FIFO enabled value
+ * @see BMI160_RA_FIFO_CONFIG_1
+ */
+bool BMI160Class::getMagFIFOEnabled() {
+    return !!(reg_read_bits(BMI160_RA_FIFO_CONFIG_1,
+                            BMI160_FIFO_MAG_EN_BIT,
+                            1));
+}
+
+/** Set magnetometer FIFO enabled value.
+ * @param enabled New magnetometer FIFO enabled value
+ * @see getMagFIFOEnabled()
+ * @see BMI160_RA_FIFO_CONFIG_1
+ */
+void BMI160Class::setMagFIFOEnabled(bool enabled) {
+    reg_write_bits(BMI160_RA_FIFO_CONFIG_1, enabled ? 0x1 : 0,
+                   BMI160_FIFO_MAG_EN_BIT,
                    1);
 }
 
@@ -2185,6 +2304,78 @@ void BMI160Class::getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx,
     *az = (((int16_t)buffer[11]) << 8) | buffer[10];
 }
 
+/** Get raw 9-axis motion sensor readings (accel/gyro/magneto) plus the hall resistor readings.
+ * Retrieves all currently available motion sensor values.
+ * @param ax 16-bit signed integer container for accelerometer X-axis value
+ * @param ay 16-bit signed integer container for accelerometer Y-axis value
+ * @param az 16-bit signed integer container for accelerometer Z-axis value
+ * @param gx 16-bit signed integer container for gyroscope X-axis value
+ * @param gy 16-bit signed integer container for gyroscope Y-axis value
+ * @param gz 16-bit signed integer container for gyroscope Z-axis value
+ * @param mx 16-bit signed integer container for magnetometer X-axis value
+ * @param my 16-bit signed integer container for magnetometer Y-axis value
+ * @param mz 16-bit signed integer container for magnetometer Z-axis value
+ * @param rh 16-bit unsigned integer container for Hall resistor value
+ * @see getAcceleration()
+ * @see getRotation()
+ * @see getMagneto()
+ * @see BMI160_RA_MAG_X_L
+ * @see Bosch code and Bosch check code at https://github.com/EmotiBit/BMI160-Arduino/commit/c12a02228fef3c1520ae0164bdca044d22d055ef
+ *      
+ */
+void BMI160Class::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, 
+                            int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {          //Added for BMM150 Support
+    uint8_t buffer[20];
+    buffer[0] = BMI160_RA_MAG_X_L;
+    //BMI160 register map (pg48): https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST-BMI160-DS000.pdf
+    //BMM150 register map (pg22): https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST-BMM150-DS001.pdf
+    // Read 20 bytes of data starting at BMI160_RA_MAG_X_L = 0x04 and ending at 0x17
+    serial_buffer_transfer(buffer, 1, 20);
+    //Expand MSB in buffer[n] to int16_t, and shift to the most significant byte
+    //Set non data bits in LSB in buffer[n-1] to 0
+    //bitwise or new 16 bit MSB with masked LSB, essentially tacking LSB as least significant byte of int16_t
+    //Divide by 2^b where b is the number of non data bits in LSB, representing a compensation for left shift of the <16 bit number
+    /* Mag X axis data */
+	extractMotion9(buffer, ax, ay, az, gx, gy, gz,  mx, my, mz, rh);
+}
+
+/** Extract raw 9-axis motion sensor readings (accel/gyro/magneto) plus the hall resistor readings from 20 byte buffer
+ * Retrieves all currently available motion sensor values.
+ * @param ax 16-bit signed integer container for accelerometer X-axis value
+ * @param ay 16-bit signed integer container for accelerometer Y-axis value
+ * @param az 16-bit signed integer container for accelerometer Z-axis value
+ * @param gx 16-bit signed integer container for gyroscope X-axis value
+ * @param gy 16-bit signed integer container for gyroscope Y-axis value
+ * @param gz 16-bit signed integer container for gyroscope Z-axis value
+ * @param mx 16-bit signed integer container for magnetometer X-axis value
+ * @param my 16-bit signed integer container for magnetometer Y-axis value
+ * @param mz 16-bit signed integer container for magnetometer Z-axis value
+ * @param rh 16-bit unsigned integer container for Hall resistor value
+ * @see getMotion9()
+ * @see getAcceleration()
+ * @see getRotation()
+ * @see getMagneto()
+ * @see BMI160_RA_MAG_X_L
+ * @see Bosch code and Bosch check code at https://github.com/EmotiBit/BMI160-Arduino/commit/c12a02228fef3c1520ae0164bdca044d22d055ef
+ *      
+ */
+void BMI160Class::extractMotion9(uint8_t * buffer, int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {
+	*mx = (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;  //MSK = 0xF8
+    /* Mag Y axis data */
+    *my = (int16_t)((((int16_t)buffer[3])<<8) | (buffer[2] & BMM150_DATA_Y_MSK))/8;  //MSK = 0xF8
+    /* Mag Z axis data */
+    *mz = (int16_t)((((int16_t)buffer[5])<<8) | (buffer[4] & BMM150_DATA_Z_MSK))/2;  //MSK = 0xFE
+    /* Mag R-HALL data */
+    *rh = ((((uint16_t)buffer[7])<<8) | (buffer[6] & BMM150_DATA_RHALL_MSK))/4; //MSK = 0xFC
+    *gx = (((int16_t)buffer[9])  << 8) | buffer[8];
+    *gy = (((int16_t)buffer[11])  << 8) | buffer[10];
+    *gz = (((int16_t)buffer[13])  << 8) | buffer[12];
+    *ax = (((int16_t)buffer[15])  << 8) | buffer[14];
+    *ay = (((int16_t)buffer[17])  << 8) | buffer[16];
+    *az = (((int16_t)buffer[19]) << 8) | buffer[18];					
+}
+							
+
 /** Get 3-axis accelerometer readings.
  * These registers store the most recent accelerometer measurements.
  * Accelerometer measurements are written to these registers at the Output Data Rate
@@ -2368,6 +2559,105 @@ int16_t BMI160Class::getRotationZ() {
     return (((int16_t)buffer[1]) << 8) | buffer[0];
 }
 
+/** Get 3-axis magnetometer readings. UNTESTED!!!
+ * These magnetometer measurement registers, along with the accelerometer
+ * measurement registers, temperature measurement registers, and external sensor
+ * data registers, are composed of two sets of registers: an internal register
+ * set and a user-facing read register set.
+ * The data within the magnetometer sensors' internal register set is always
+ * updated at the Output Data Rate. Meanwhile, the user-facing read register set
+ * duplicates the internal register set's data values whenever the serial
+ * interface is idle. This guarantees that a burst read of sensor registers will
+ * read measurements from the same sampling instant. Note that if burst reads
+ * are not used, the user is responsible for ensuring a set of single byte reads
+ * correspond to a single sampling instant by checking the Data Ready interrupt.
+ *
+ * Each 16-bit magnetometer measurement has a full scale configured by
+ * @setFullScaleMagRange. For each full scale setting, the magnetometers'
+ * sensitivity per LSB is shown in the table below:
+ *
+ * <pre>
+ * Full Scale Range | LSB Sensitivity
+ * -----------------+----------------
+ * +/- 2g           | 8192 LSB/mg
+ * +/- 4g           | 4096 LSB/mg
+ * +/- 8g           | 2048 LSB/mg
+ * +/- 16g          | 1024 LSB/mg
+ * </pre>
+ *
+ * @param x 16-bit signed integer container for X-axis rotation
+ * @param y 16-bit signed integer container for Y-axis rotation
+ * @param z 16-bit signed integer container for Z-axis rotation
+* @param z 16-bit signed integer container for Z-axis rotation
+ * @see getMotion9()
+ * @see BMI160_RA_MAG_X_L
+ */
+// void BMI160Class::getMagneto(int16_t* mx, int16_t* my, int16_t* mz, uint16_t* rh) {    //Added for BMM150 Support
+//     uint8_t buffer[8];
+//     buffer[0] = BMI160_RA_MAG_X_L;
+//     serial_buffer_transfer(buffer, 1, 8);
+//     //Expand MSB in buffer[n] to int16_t, and shift to the most significant byte
+//     //Set non data bits in LSB in buffer[n-1] to 0
+//     //bitwise or new 16 bit MSB with masked LSB, essentially tacking LSB as least significant byte of int16_t
+//     //Divide by 2^b where b is the number of non data bits in LSB, representing a compensation for left shift of the <16 bit number
+//     /* Mag X axis data */
+//     *mx = (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;  //MSK = 0xF8
+//     /* Mag Y axis data */
+//     *my = (int16_t)((((int16_t)buffer[3])<<8) | (buffer[2] & BMM150_DATA_Y_MSK))/8;  //MSK = 0xF8
+//     /* Mag Z axis data */
+//     *mz = (int16_t)((((int16_t)buffer[5])<<8) | (buffer[4] & BMM150_DATA_Z_MSK))/2;  //MSK = 0xFE
+//     /* Mag R-HALL data */
+//     *rh = ((((uint16_t)buffer[7])<<8) | (buffer[6] & BMM150_DATA_RHALL_MSK))/4; //MSK = 0xFC
+// }
+
+/** Get X-axis magnetometer reading.UNTESTED!!!
+ * @return X-axis magnetometer measurement in 16-bit 2's complement format
+ * @see getMotion6()
+ * @see BMI160_RA_MAG_X_L
+ */
+// int16_t BMI160Class::getMagnetoX() {                                  //Added for BMM150 Support
+//     uint8_t buffer[2];
+//     buffer[0] = BMI160_RA_MAG_X_L;
+//     serial_buffer_transfer(buffer, 1, 2);
+//     return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_X_MSK))/8;
+// }
+
+/** Get Y-axis magnetometer reading.UNTESTED!!!
+ * @return Y-axis magnetometer measurement in 16-bit 2's complement format
+ * @see getMotion6()
+ * @see BMI160_RA_MAG_Y_L
+ */
+// int16_t BMI160Class::getMagnetoY() {                                  //Added for BMM150 Support
+//     uint8_t buffer[2];
+//     buffer[0] = BMI160_RA_MAG_Y_L;
+//     serial_buffer_transfer(buffer, 1, 2);
+//     return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_Y_MSK))/8;
+// }
+
+/** Get Z-axis magnetometer reading.UNTESTED!!!
+ * @return Z-axis magnetometer measurement in 16-bit 2's complement format
+ * @see getMotion6()
+ * @see BMI160_RA_MAG_Z_L
+ */
+// int16_t BMI160Class::getMagnetoZ() {                                  //Added for BMM150 Support
+//     uint8_t buffer[2];
+//     buffer[0] = BMI160_RA_MAG_Z_L;
+//     serial_buffer_transfer(buffer, 1, 2);
+//     return (int16_t)((((int16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_Z_MSK))/2;
+// }
+
+/** Get RHall magnetometer reading.UNTESTED!!!
+ * @return Rhall magnetometer measurement in 16-bit unsigned int format
+ * @see getMotion6()
+ * @see BMI160_RA_MAG_R_L
+ */
+// uint16_t BMI160Class::getRHall(){
+//     uint8_t buffer[2];
+//     buffer[0] = BMI160_RA_MAG_R_L;
+//     serial_buffer_transfer(buffer, 1, 2);
+//     return ((((uint16_t)buffer[1])<<8) | (buffer[0] & BMM150_DATA_RHALL_MSK))/4;
+// }
+
 /** Read a BMI160 register directly.
  * @param reg register address
  * @return 8-bit register value
@@ -2382,4 +2672,57 @@ uint8_t BMI160Class::getRegister(uint8_t reg) {
  */
 void BMI160Class::setRegister(uint8_t reg, uint8_t data) {
     reg_write(reg, data);
+}
+
+/** Write a BMI160 register directly.
+ * @param reg register address
+ * @param data 8-bit register value
+ * @param bitMask 8-bit mask
+ */
+void BMI160Class::setRegister(uint8_t reg, uint8_t data, uint8_t bitMask) {
+	uint8_t regValue = reg_read(reg);
+	data = (((uint8_t) regValue) & ~bitMask) | data;
+    reg_write(reg, data);
+}
+
+//Added for Better hibernation, could to save up to 3.5mA current draw
+void BMI160Class::suspendIMU(){
+  uint8_t pmu= 255;
+  //The Acc, gyr, and mag are suspended individually, so as to garauntee no collisions in the cmd register; may not be neccessary
+  //ToDo: Look into switch to reg_read_bits()
+  //Suspend Accelerometer
+  //0001 00nn where nn are the pwr bits, 00 for suspend
+  setRegister(BMI160_RA_CMD, 0x10); //set acc pmu mode to suspend: 0001 0000
+  delay(BMI160_READ_WRITE_DELAY);
+  do {
+    pmu = getRegister(BMI160_RA_PMU_STATUS);
+    delay(BMI160_READ_WRITE_DELAY);
+  } //Poll correspinding two pwr status bits in the PMU register
+  while ((get_bit(pmu, BMI160_ACC_PMU_STATUS_BIT) != 0) && (get_bit(pmu, BMI160_ACC_PMU_STATUS_BIT + 1) != 0));
+  
+  //Suspend Gyro
+  //0001 01nn where nn are the pwr bits, 00 for suspend
+  setRegister(BMI160_RA_CMD, 0x14); //set gyr pmu mode to suspend: 0001 0100
+  delay(BMI160_READ_WRITE_DELAY);
+  do {
+    pmu = getRegister(BMI160_RA_PMU_STATUS);
+    delay(BMI160_READ_WRITE_DELAY);
+  } //Poll correspinding two pwr status bits in the PMU register
+  while ((get_bit(pmu, BMI160_GYR_PMU_STATUS_BIT) != 0) && (get_bit(pmu, BMI160_GYR_PMU_STATUS_BIT + 1) != 0));
+
+
+  //Suspend Mag
+  //0001 10nn where nn are the pwr bits, 00 for suspend
+  setRegister(BMI160_RA_CMD, 0x18); //set mag pmu mode to suspend: 0001 1000
+  delay(BMI160_AUX_COM_DELAY);
+  do {
+    pmu = getRegister(BMI160_RA_PMU_STATUS);
+    delay(BMI160_READ_WRITE_DELAY);
+  } //Poll correspinding two pwr status bits in the PMU register
+  while ((get_bit(pmu, BMI160_MAG_PMU_STATUS_BIT) != 0) && (get_bit(pmu, BMI160_MAG_PMU_STATUS_BIT + 1) != 0));
+}
+
+bool BMI160Class::get_bit(uint8_t num, uint8_t bit) {
+  uint8_t mask = 1 << bit;
+  return mask == (num & mask);
 }

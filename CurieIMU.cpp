@@ -1294,21 +1294,21 @@ void CurieIMUClass::setZeroMotionDetectionDuration(float duration)
 
 int CurieIMUClass::getTapShockDuration()
 {
-    int duration;
+	int duration;
 
-    switch (BMI160Class::getTapShockDuration()) {
-        case BMI160_TAP_SHOCK_DURATION_50MS:
-            duration = 50;
-            break;
+	if (BMI160Class::getTapShockDuration()) {
+		//case BMI160_TAP_SHOCK_DURATION_75MS:
+		duration = 75;
+	}
+	else
+	{
+		//case BMI160_TAP_SHOCK_DURATION_50MS:
+		duration = 50;
+	}
 
-        case BMI160_TAP_SHOCK_DURATION_75MS:
-        default:
-            duration = 75;
-            break;
-    }
-
-    return duration;
+	return duration;
 }
+
 
 void CurieIMUClass::setTapShockDuration(int duration)
 {
@@ -1325,20 +1325,20 @@ void CurieIMUClass::setTapShockDuration(int duration)
 
 int CurieIMUClass::getTapQuietDuration()
 {
-    int duration;
+	int duration;
 
-    switch (BMI160Class::getTapQuietDuration()) {
-        case BMI160_TAP_QUIET_DURATION_30MS:
-            duration = 30;
-            break;
+	if (BMI160Class::getTapQuietDuration()) {
+		//case BMI160_TAP_QUIET_DURATION_20MS:
+		duration = 20;
+	}
+	else
+	{
+		//case BMI160_TAP_QUIET_DURATION_30MS:
+		duration = 30;
+	}
 
-        case BMI160_TAP_QUIET_DURATION_20MS:
-        default:
-            duration = 20;
-            break;
-    }
 
-    return duration;
+	return duration;
 }
 
 void CurieIMUClass::setTapQuietDuration(int duration)

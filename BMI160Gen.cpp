@@ -1,17 +1,18 @@
 #include "BMI160Gen.h"
 #include "SPI.h"
-#include "Wire.h"
+
 
 //#define DEBUG
 
 bool BMI160GenClass::begin(const int spi_cs_pin, const int intr_pin)
-{
-    return begin(SPI_MODE, spi_cs_pin, intr_pin);
+{	
+    return begin(SPI_MODE, Wire, spi_cs_pin, intr_pin);
 }
 
-bool BMI160GenClass::begin(Mode mode, const int arg1, const int arg2)
+bool BMI160GenClass::begin(Mode mode, TwoWire &wirePort,const int arg1, const int arg2)
 {
     this->mode = mode;
+	_i2cPort = &wirePort;
     switch (this->mode) {
     case INVALID_MODE:
         return false;
@@ -80,9 +81,9 @@ void BMI160GenClass::i2c_init()
   Serial.println("BMI160GenClass::i2c_init()...");
 #endif // DEBUG
 
-  Wire.begin();
-  Wire.beginTransmission(i2c_addr);
-  if( Wire.endTransmission() != 0 )
+  //_i2cPort->begin();
+  _i2cPort->beginTransmission(i2c_addr);
+  if( _i2cPort->endTransmission() != 0 )
       Serial.println("BMI160GenClass::i2c_init(): I2C failed.");
 
 #ifdef DEBUG
@@ -107,26 +108,26 @@ int BMI160GenClass::i2c_xfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt)
   Serial.print("):");
 #endif // DEBUG
 
-  Wire.beginTransmission(i2c_addr);
+  _i2cPort->beginTransmission(i2c_addr);
   p = buf;
   while (0 < tx_cnt) {
     tx_cnt--;
-    Wire.write(*p++);
+    _i2cPort->write(*p++);
   }
-  if( Wire.endTransmission() != 0 ) {
+  if( _i2cPort->endTransmission() != 0 ) {
       Serial.println("Wire.endTransmission() failed.");
   }
   if (0 < rx_cnt) {
-    Wire.requestFrom(i2c_addr, rx_cnt);
+    _i2cPort->requestFrom(i2c_addr, rx_cnt);
     p = buf;
-    while ( Wire.available() && 0 < rx_cnt) {
+    while ( _i2cPort->available() && 0 < rx_cnt) {
       rx_cnt--;
 #ifdef DEBUG
-      int t = *p++ = Wire.read();
+      int t = *p++ = _i2cPort->read();
       Serial.print(" ");
       Serial.print(t, HEX);
 #else
-      *p++ = Wire.read();;
+      *p++ = _i2cPort->read();;
 #endif // DEBUG
     }
   }
